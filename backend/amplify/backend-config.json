@@ -1,0 +1,49 @@
+{
+  "api": {
+    "check2go": {
+      "dependsOn": [
+        {
+          "attributes": ["UserPoolId"],
+          "category": "auth",
+          "resourceName": "check2gof424a61f"
+        }
+      ],
+      "output": {
+        "authConfig": {
+          "additionalAuthenticationProviders": [
+            {
+              "authenticationType": "AMAZON_COGNITO_USER_POOLS",
+              "userPoolConfig": {"userPoolId": "authcheck2gof424a61f"}
+            }
+          ],
+          "defaultAuthentication": {
+            "apiKeyConfig": {"apiKeyExpirationDays": 7},
+            "authenticationType": "API_KEY"
+          }
+        }
+      },
+      "providerPlugin": "awscloudformation",
+      "service": "AppSync"
+    }
+  },
+  "auth": {
+    "check2gof424a61f": {
+      "customAuth": false,
+      "dependsOn": [],
+      "frontendAuthConfig": {
+        "mfaConfiguration": "OFF",
+        "mfaTypes": ["SMS"],
+        "passwordProtectionSettings": {
+          "passwordPolicyCharacters": [],
+          "passwordPolicyMinLength": 8
+        },
+        "signupAttributes": ["EMAIL"],
+        "socialProviders": [],
+        "usernameAttributes": ["EMAIL", "PHONE_NUMBER"],
+        "verificationMechanisms": ["EMAIL"]
+      },
+      "providerPlugin": "awscloudformation",
+      "service": "Cognito"
+    }
+  }
+}
