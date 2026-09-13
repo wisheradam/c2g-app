@@ -6,177 +6,148 @@ The APK filename date is treated as the build/reference date unless stronger evi
 
 ## Build timeline
 
-| Build date | Source artifact | Size | SHA-256 | Package | Version | SDK | Persistence/native clues | Notable delta |
-|---|---|---:|---|---|---|---|---|---|
-| 2025-07-30 | `30.07.2025(1).apk` | 23.58 MiB | `3a031fee591bc342b1a6d12987332217756f87ceee107268fe770f0bd10c87b2` | `co.check2go.check2go` | `1.0.0` (`versionCode 1`) | min 21 / target 35 / compile 35 | no bundled `libsqlite3.so` or ObjectBox JNI observed | Earliest build currently in this historical set. Flutter assets include trip creation, travel dates/travelers, empty travelers state, home/events/documents/checklists icons. |
-| 2025-08-06 | `06.08.2025(1).apk` | 23.82 MiB | `2b236a7fbfaec40a1aa6d66063d380ed854988d9016bd471c7023777d0cf2045` | `co.check2go.check2go` | `1.0.0` (`versionCode 1`) | min 21 / target 35 / compile 35 | no bundled `libsqlite3.so` or ObjectBox JNI observed | Adds `ic_edit.svg` and `checklist_empty.png`; application AOT binary changed. |
-| 2025-08-24 | `24.08.2025(1).apk` | 57.35 MiB | `989e1216613dda7b97b9328249933d63f20c0279ccd68399f071a024c3603571` | `co.check2go.check2go` | `1.0.0` (`versionCode 1`) | min 24 / target 36 / compile 36 | bundled SQLite native library appears for arm64-v8a, armeabi-v7a and x86_64 | Major packaging/runtime transition. Minimum SDK rises 21→24; target/compile SDK rises 35→36; APK size more than doubles; `libsqlite3.so` is introduced. |
-| 2025-08-31 | `31.08.2025(1).apk` | 62.98 MiB | `5e2b9bd3a6430295242ab29815e79ef4219a4c7e8f42db37d2bec6f468a70553` | `co.check2go.check2go` | `1.0.0` (`versionCode 1`) | min 24 / target 36 / compile 36 | SQLite retained; ObjectBox JNI introduced for all three bundled ABIs | Adds `libobjectbox-jni.so` and `ic_checkmark.svg`. This is strong evidence that ObjectBox was introduced into the app runtime at this point, alongside SQLite. |
-| 2025-09-11 | `11.09.2025(1).apk` | 63.41 MiB | `c696b59afb382452b6282189be3eb4baa09a7192ab87e068395951d3724c4ff5` | `co.check2go.check2go` | `1.0.0` (`versionCode 1`) | min 24 / target 36 / compile 36 | SQLite + ObjectBox JNI retained | Archive entry set is unchanged from 2025-08-31, but `libapp.so`, ObjectBox JNI, `classes.dex` and other compiled artifacts changed, confirming a new build rather than a duplicate APK. |
-| 2025-09-23 | `23.09.2025(1).apk` | 66.94 MiB | `ad20041c9aff9b1ec1b84303e9cee1398315f3aee6d76f0dfd974fca374c5d8e` | `co.check2go.check2go` | `1.0.0` (`versionCode 1`) | min 24 / target 36 / compile 36 | SQLite retained; ObjectBox JNI removed; Amplify Cognito/secure-storage assets and Google credentials/sign-in components appear | Major authentication/runtime transition. APK grows from 95 to 640 entries, gains `classes2.dex`, AWS Amplify Cognito activities/assets, Google sign-in / AndroidX Credentials support and a much larger Android resource set. |
-| 2025-10-11 | `11.10.2025(1).apk` | 68.14 MiB | `3e54e99650529c4a7a828cfa3172c5e4120d63e56a17149fed4664369316788f` | `co.check2go.check2go` | `1.0.0` (`versionCode 1`) | min 24 / target 36 / compile 36 | SQLite + Amplify/Cognito stack retained | Adds `ic_document_copy.svg`, `ic_more_action_vertical.svg` and `ic_remove.svg`; application AOT binaries grow and change, consistent with new document/action UI behavior. |
-| 2025-10-26 | `26.10.2025(1).apk` | 74.84 MiB | `3d760eb6d3c7755ef625a1b0683410ccd11afa63b452a33cefe0ad42797ec703` | `co.check2go.check2go` | `1.0.0` (`versionCode 1`) | min 24 / target 36 / compile 36 | SQLite retained; AndroidX DataStore native shared-counter libraries added | Adds `ic_save.svg`, Amplify Authenticator social-login assets, AndroidX DataStore components, Apache Tika resources and URL-launcher WebView activity. This is another major dependency/feature expansion. |
-| 2025-10-27 | `27.10.2025(1).apk` | 74.87 MiB | `a19e046ba872d85cff459d8145ba398d2bb1fcbd642c65cea8aa97f540e7e928` | `co.check2go.check2go` | `1.0.0` (`versionCode 1`) | min 24 / target 36 / compile 36 | Same persistence/native library set as 2025-10-26 | No archive paths added or removed. `libapp.so`, `classes.dex` and baseline profile content changed, confirming an application-code revision one day later. |
-| 2025-10-27 | `27.10.2025 (dark theme)(1).apk` | 74.87 MiB | `f54673a2d6c189a41c26ee797ae9888f0d8524e1802f30b0fd3a818dcad006e3` | `co.check2go.check2go` | `1.0.0` (`versionCode 1`) | min 24 / target 36 / compile 36 | Same native/dependency set as standard 2025-10-27 build | Dark-theme variant. Entry names, manifest, DEX/resources/assets and file sizes match the standard 2025-10-27 APK; only the three ABI-specific `libapp.so` payloads differ, strongly locating the theme change in compiled Dart/AOT application code. |
-| 2025-10-28 | `28.10.2025_.apk` | 75.26 MiB | `73740a6353180a817afb98cbe99d1e15656464377537d6f31a4611ab034a1ee2` | `co.check2go.check2go` | `1.0.0` (`versionCode 1`) | min 24 / target 36 / compile 36 | Same packaged dependencies as 2025-10-27 | Archive layout is unchanged from both 2025-10-27 variants. Only the three ABI-specific `libapp.so` files change, so this is another Dart/AOT application-code revision with no resource/dependency delta. |
-| 2025-10-30 | `30.10.2025.apk` | 72.28 MiB | `fe17f6181f8a212f8f6f875f4d44e2d3bea5d8c79ed257f31182557b2a6aed83` | `co.check2go.check2go` | `1.0.0` (`versionCode 1`) | min 24 / target 36 / compile 36 | SQLite + DataStore + Amplify assets retained; Google Credentials/Sign-In Android components removed | Packaging is simplified from 689 to 475 entries. AndroidX Credentials, Google Sign-In, FIDO/Play Services auth metadata and their manifest activities/services disappear, while Amplify Cognito/Auth/secure-storage Flutter assets remain. APK shrinks by about 3 MiB. |
-| 2025-12-30 | `30.12.2025.apk` | 103.74 MiB | `13e176212bba26d022c044814e779f53882c210db7dd2f78ed9240e95ff59888` | `co.check2go.check2go` | `1.0.0` (`versionCode 1`) | min 24 / target 36 / compile 36 | SQLite + DataStore retained; bundled Google ML Kit OCR pipeline added for all three ABIs | Major OCR/document-processing expansion. Adds bundled ML Kit OCR models and `libmlkit_google_ocr_pipeline.so`, plus `ic_beach.svg`, `ic_person_add.svg`, `ic_person_square.svg`; app label changes from `check2go` to `Check2go`. APK grows by more than 31 MiB. |
-| 2026-01-12 | `12.01.2026.apk` | 104.18 MiB | `24b77ae351300eb58b04befe5c4130a7f415a5ee79a8b6132c37222b24beeb85` | `co.check2go.check2go` | `1.0.0` (`versionCode 1`) | min 24 / target 36 / compile 36 | ML Kit OCR stack retained; camera/image-picker Android integration added | Adds `android.permission.CAMERA`, Flutter `ImagePickerFileProvider`, Google module-dependency service, and new `ic_camera.svg` / `ic_image.svg` assets. This is the first archived build here with explicit Android camera support. |
+| Build date | Source artifact | Size | SHA-256 | Package | Version | SDK | Notable delta |
+|---|---|---:|---|---|---|---|---|
+| 2025-07-30 | `30.07.2025(1).apk` | 23.58 MiB | `3a031fee591bc342b1a6d12987332217756f87ceee107268fe770f0bd10c87b2` | `co.check2go.check2go` | `1.0.0` (`versionCode 1`) | min 21 / target 35 / compile 35 | Earliest recovered build; baseline trip/checklist/document/navigation assets. |
+| 2025-08-06 | `06.08.2025(1).apk` | 23.82 MiB | `2b236a7fbfaec40a1aa6d66063d380ed854988d9016bd471c7023777d0cf2045` | `co.check2go.check2go` | `1.0.0` (`versionCode 1`) | min 21 / target 35 / compile 35 | Adds `ic_edit.svg` and `checklist_empty.png`; AOT app binary changes. |
+| 2025-08-24 | `24.08.2025(1).apk` | 57.35 MiB | `989e1216613dda7b97b9328249933d63f20c0279ccd68399f071a024c3603571` | `co.check2go.check2go` | `1.0.0` (`versionCode 1`) | min 24 / target 36 / compile 36 | Major runtime shift; SQLite native library appears; SDK baseline rises. |
+| 2025-08-31 | `31.08.2025(1).apk` | 62.98 MiB | `5e2b9bd3a6430295242ab29815e79ef4219a4c7e8f42db37d2bec6f468a70553` | `co.check2go.check2go` | `1.0.0` (`versionCode 1`) | min 24 / target 36 / compile 36 | ObjectBox JNI added alongside SQLite; adds `ic_checkmark.svg`. |
+| 2025-09-11 | `11.09.2025(1).apk` | 63.41 MiB | `c696b59afb382452b6282189be3eb4baa09a7192ab87e068395951d3724c4ff5` | `co.check2go.check2go` | `1.0.0` (`versionCode 1`) | min 24 / target 36 / compile 36 | Same packaged layout as 2025-08-31 but rebuilt application/native persistence binaries. |
+| 2025-09-23 | `23.09.2025(1).apk` | 66.94 MiB | `ad20041c9aff9b1ec1b84303e9cee1398315f3aee6d76f0dfd974fca374c5d8e` | `co.check2go.check2go` | `1.0.0` (`versionCode 1`) | min 24 / target 36 / compile 36 | ObjectBox removed; Amplify Cognito/secure storage + Google credentials/sign-in components and multidex appear. |
+| 2025-10-11 | `11.10.2025(1).apk` | 68.14 MiB | `3e54e99650529c4a7a828cfa3172c5e4120d63e56a17149fed4664369316788f` | `co.check2go.check2go` | `1.0.0` (`versionCode 1`) | min 24 / target 36 / compile 36 | Adds document/action assets: copy, overflow action and remove. |
+| 2025-10-26 | `26.10.2025(1).apk` | 74.84 MiB | `3d760eb6d3c7755ef625a1b0683410ccd11afa63b452a33cefe0ad42797ec703` | `co.check2go.check2go` | `1.0.0` (`versionCode 1`) | min 24 / target 36 / compile 36 | Adds save action, Amplify Authenticator assets, AndroidX DataStore, Apache Tika and URL-launcher WebView support. |
+| 2025-10-27 | `27.10.2025(1).apk` | 74.87 MiB | `a19e046ba872d85cff459d8145ba398d2bb1fcbd642c65cea8aa97f540e7e928` | `co.check2go.check2go` | `1.0.0` (`versionCode 1`) | min 24 / target 36 / compile 36 | Application-code revision with unchanged archive layout. |
+| 2025-10-27 | `27.10.2025 (dark theme)(1).apk` | 74.87 MiB | `f54673a2d6c189a41c26ee797ae9888f0d8524e1802f30b0fd3a818dcad006e3` | `co.check2go.check2go` | `1.0.0` (`versionCode 1`) | min 24 / target 36 / compile 36 | Dark-theme variant; only ABI-specific Dart AOT `libapp.so` payloads differ from standard 27.10. |
+| 2025-10-28 | `28.10.2025_.apk` | 75.26 MiB | `73740a6353180a817afb98cbe99d1e15656464377537d6f31a4611ab034a1ee2` | `co.check2go.check2go` | `1.0.0` (`versionCode 1`) | min 24 / target 36 / compile 36 | Another AOT-code-only revision; packaged paths unchanged. |
+| 2025-10-30 | `30.10.2025.apk` | 72.28 MiB | `fe17f6181f8a212f8f6f875f4d44e2d3bea5d8c79ed257f31182557b2a6aed83` | `co.check2go.check2go` | `1.0.0` (`versionCode 1`) | min 24 / target 36 / compile 36 | Android auth footprint simplified: Google Sign-In / AndroidX Credentials/FIDO components removed while Amplify assets remain. |
+| 2025-12-30 | `30.12.2025.apk` | 103.74 MiB | `13e176212bba26d022c044814e779f53882c210db7dd2f78ed9240e95ff59888` | `co.check2go.check2go` | `1.0.0` (`versionCode 1`) | min 24 / target 36 / compile 36 | Major OCR expansion: bundled Google ML Kit models + `libmlkit_google_ocr_pipeline.so`; new people/travel assets; label becomes `Check2go`. |
+| 2026-01-12 | `12.01.2026.apk` | 104.18 MiB | `24b77ae351300eb58b04befe5c4130a7f415a5ee79a8b6132c37222b24beeb85` | `co.check2go.check2go` | `1.0.0` (`versionCode 1`) | min 24 / target 36 / compile 36 | Camera/gallery input added: `CAMERA`, ImagePicker provider, `ic_camera.svg`, `ic_image.svg`. |
+| 2026-01-21 | `21.01.2026.apk` | 108.35 MiB | `e65540cbf91dc5c1d24c4bf59791e48b157f19fdb5791fbda40a4870828c2301` | `co.check2go` | `0.5.0` (`versionCode 1`) | min 24 / target 36 / compile 36 | **Android identity reset:** package changes to `co.check2go`, main activity to `co.check2go.MainActivity`, versionName to `0.5.0`. Local notifications + WorkManager/Room scheduling stack added. |
+| 2026-01-28 | `28.01.2026.apk` | 108.57 MiB | `df360f93684612cf97b6f2263a763863be92a48d6fdcf6a0a4f537d430e0bd57` | `co.check2go` | `0.5.0` (`versionCode 1`) | min 24 / target 36 / compile 36 | UI/navigation expansion: PDF, category/filter, language, location, refresh, share and theme assets; old mock destination backgrounds removed. |
+| 2026-02-02 | `02.02.2026(1).apk` | 110.99 MiB | `f1c0423c4796943eae55152a8763a1b95eca30da481fd8ce1f3f538d5ffbfe8f` | `co.check2go` | `0.5.0` (`versionCode 1`) | min 24 / target 36 / compile 36 | Contact/people expansion: `READ_CONTACTS`, `flutter_contacts`, import/search/link/mail/person assets, social-provider icons and `intl_phone_field` flag assets. Matches the existing 02.02.2026 recovery reference hash. |
 
-## Shared Android identity in this archive
+## Duplicate artifact aliases
 
-Verified across all fourteen APK artifacts currently registered:
+- `12.01.2026(1).apk` is byte-for-byte identical to `12.01.2026.apk`: same size and SHA-256 `24b77ae351300eb58b04befe5c4130a7f415a5ee79a8b6132c37222b24beeb85`. It is not counted as a separate build.
+
+## Android identity timeline
+
+### Through 2026-01-12
 
 - Package: `co.check2go.check2go`
 - Main activity: `co.check2go.check2go.MainActivity`
-- Flutter embedding: present
 - Version name: `1.0.0`
 - Version code: `1`
-- ABIs bundled: arm64-v8a, armeabi-v7a, x86_64
-- App label is `check2go` through 2025-10-30 and becomes `Check2go` by 2025-12-30.
 
-From 2025-08-24 onward the Android SDK baseline is min SDK 24 / target SDK 36 / compile SDK 36. Because `versionName` and `versionCode` were not incremented across these archived builds, the filename date, variant label and file hash are important identifiers for recovery work.
+### From 2026-01-21
+
+- Package: `co.check2go`
+- Main activity: `co.check2go.MainActivity`
+- Version name: `0.5.0`
+- Version code: `1`
+
+The package/application ID change means Android treats the 2026-01-21 line as a different application identity from earlier `co.check2go.check2go` builds rather than a normal in-place APK update.
+
+Common baseline from 2025-08-24 onward remains min SDK 24 / target SDK 36 / compile SDK 36. All inspected builds bundle arm64-v8a, armeabi-v7a and x86_64.
 
 ## Asset and dependency evolution observed
 
-### 2025-07-30 baseline
+### 2025-07-30 → 2025-10-30
 
-Observed Flutter assets include:
+Key transitions:
+- 2025-08-06: edit/checklist-empty UI assets.
+- 2025-08-24: SQLite introduced; SDK baseline raised.
+- 2025-08-31: ObjectBox JNI introduced.
+- 2025-09-23: ObjectBox removed; Amplify Cognito/secure storage, Google credentials/sign-in support and multidex introduced.
+- 2025-10-11: document/action UI assets added.
+- 2025-10-26: DataStore, Amplify Authenticator assets, Apache Tika, save action and WebView support added.
+- 2025-10-27/28: AOT application revisions, including a 27.10 dark-theme variant.
+- 2025-10-30: native Google Sign-In / AndroidX Credentials/FIDO footprint removed while Amplify remains.
 
-- `background_create_trip.jpg`
-- `travel_dates_step.jpg`
-- `travel_travelers_step.jpg`
-- `travelers_list_empty.png`
-- `mock_background_abudhabi.jpg`
-- `mock_background_telaviv.jpg`
-- navigation/action icons for home, events, documents, checklists, calendar, settings, notifications and related flows
-
-### 2025-08-06
-
-Added:
-
-- `assets/icons/ic_edit.svg`
-- `assets/images/checklist_empty.png`
-
-### 2025-08-24
-
-No new product-facing Flutter asset was identified relative to 2025-08-06, but native/runtime packaging changed substantially and SQLite became bundled.
-
-### 2025-08-31
-
-Added:
-
-- `assets/icons/ic_checkmark.svg`
-- ObjectBox JNI native libraries
-
-### 2025-09-11
-
-No asset-path additions or removals were observed relative to 2025-08-31. Compiled application/runtime content changed.
-
-### 2025-09-23
-
-No new product-facing app asset path was added, but the Android/runtime layer changed sharply:
-
-- ObjectBox JNI disappears from all three ABIs;
-- `classes2.dex` appears;
-- AWS Amplify Cognito and secure-storage worker assets are packaged;
-- manifest entries for Amplify Cognito custom tabs/dev menu appear;
-- Google Sign-In and AndroidX Credentials components appear;
-- Android resource and dependency metadata expands substantially.
-
-This is the strongest evidence in the current archive for the introduction of an Amplify/Cognito-based authentication stack.
-
-### 2025-10-11
-
-Added:
-
-- `assets/icons/ic_document_copy.svg`
-- `assets/icons/ic_more_action_vertical.svg`
-- `assets/icons/ic_remove.svg`
-
-No archive paths were removed.
-
-### 2025-10-26
-
-Added or newly visible:
-
-- `assets/icons/ic_save.svg`
-- Amplify Authenticator social-button font and Google icon assets;
-- AndroidX DataStore libraries and `libdatastore_shared_counter.so` for all three ABIs;
-- Apache Tika MIME/detection/parser resources;
-- URL launcher WebView activity in the manifest.
-
-Apache Tika presence demonstrates a bundled file/metadata parsing dependency, but APK inspection alone does not prove exactly which user flow invokes it.
-
-### 2025-10-27
-
-The standard build has the same archive-entry layout as 2025-10-26. Application AOT code, `classes.dex` and dex baseline-profile content changed.
-
-The dark-theme variant has exactly the same archive-entry paths as the standard 2025-10-27 build. Manifest, DEX, Android resources and Flutter assets are byte-identical; only `libapp.so` differs for arm64-v8a, armeabi-v7a and x86_64. This makes it a particularly useful reference for isolating the historical theme implementation.
-
-### 2025-10-28
-
-No archive paths are added or removed relative to either 2025-10-27 variant. Only `libapp.so` changes in all three ABIs. This is a clean AOT-code-only revision.
-
-### 2025-10-30
-
-The Android dependency footprint contracts substantially:
-
-- archive entry count drops from 689 to 475;
-- AndroidX Credentials packages disappear;
-- Google Sign-In activities/services disappear from the manifest;
-- Google/FIDO/Play Services auth metadata and many associated Android resources disappear;
-- Amplify Cognito, Amplify Authenticator and secure-storage Flutter assets remain;
-- Flutter product asset paths stay unchanged.
-
-This indicates a deliberate simplification/rework of native authentication integration rather than removal of the higher-level Amplify authentication stack.
-
-### 2025-12-30
+### 2025-12-30 — OCR expansion
 
 Major additions:
-
-- bundled Google ML Kit text-recognition/OCR model assets;
-- `libmlkit_google_ocr_pipeline.so` for arm64-v8a, armeabi-v7a and x86_64;
-- ML Kit init/service/provider components and Google DataTransport runtime components;
-- `assets/icons/ic_beach.svg`;
-- `assets/icons/ic_person_add.svg`;
-- `assets/icons/ic_person_square.svg`;
-- Flutter `stretch_effect.frag` shader;
+- bundled Google ML Kit text-recognition models;
+- `libmlkit_google_ocr_pipeline.so` for all three ABIs;
+- ML Kit init/service/provider components and Google DataTransport components;
+- `ic_beach.svg`, `ic_person_add.svg`, `ic_person_square.svg`;
 - app label capitalization changes to `Check2go`.
 
-The size increase from 72.28 MiB to 103.74 MiB is primarily consistent with the bundled OCR runtime/models and associated dependencies.
-
-### 2026-01-12
+### 2026-01-12 — camera/gallery input
 
 Added:
-
 - `android.permission.CAMERA`;
 - `io.flutter.plugins.imagepicker.ImagePickerFileProvider`;
-- `com.google.android.gms.metadata.ModuleDependencies` service;
-- `assets/icons/ic_camera.svg`;
-- `assets/icons/ic_image.svg`.
+- Google module-dependency service;
+- `ic_camera.svg`;
+- `ic_image.svg`.
 
-ML Kit OCR remains present. Together, the new permission/provider/icons strongly indicate a camera/gallery input path feeding image/document processing, though APK inspection alone cannot reconstruct the exact UI flow.
+ML Kit OCR remains present, strongly supporting a camera/gallery → OCR/document-processing path.
+
+### 2026-01-21 — app identity + notifications/scheduling
+
+This is one of the largest architectural transitions in the archive:
+
+- package changes `co.check2go.check2go` → `co.check2go`;
+- main activity changes accordingly;
+- versionName changes `1.0.0` → `0.5.0`;
+- new permissions include `RECEIVE_BOOT_COMPLETED`, `VIBRATE`, `WAKE_LOCK`, `POST_NOTIFICATIONS`, `SCHEDULE_EXACT_ALARM`, `USE_EXACT_ALARM`, and `FOREGROUND_SERVICE`;
+- `flutter_local_notifications` receivers appear;
+- AndroidX WorkManager services/receivers and Room invalidation service appear;
+- new product assets include alert/notification states, empty states, people/profile/trip/sign-out and `logo.svg`;
+- old `ic_beach.svg`, `checklist_empty.png` and `travelers_list_empty.png` are removed.
+
+This strongly supports introduction of persistent local reminder/notification scheduling plus a broader UI/navigation redesign.
+
+### 2026-01-28 — navigation/settings/document polish
+
+Added product assets:
+- `ic_arrow_left.svg`;
+- category/filter controls;
+- chevrons and close;
+- `ic_document_pdf.svg`;
+- `ic_language.svg`;
+- `ic_location.svg`;
+- `ic_refresh.svg`;
+- `ic_share.svg`;
+- `ic_theme.svg`.
+
+Removed:
+- `mock_background_abudhabi.jpg`;
+- `mock_background_telaviv.jpg`.
+
+Package/version/notification permissions remain stable from 2026-01-21.
+
+### 2026-02-02 — contacts + phone-field/auth UI expansion
+
+Added:
+- `android.permission.READ_CONTACTS`;
+- verified `flutter_contacts` Android plugin code;
+- `ic_import_contacts.svg`;
+- `ic_link.svg`, `ic_mail.svg`, `ic_person_circle.svg`, `ic_replace.svg`, `ic_search.svg`;
+- `ic_apple.svg`, `ic_facebook.svg`, `ic_google.svg`;
+- `logo_checkmark.svg`, `logo_static.svg`, `logo_static.png`;
+- 256 country/region flag assets from `intl_phone_field`.
+
+The Apple/Facebook/Google icons demonstrate provider-facing UI assets; icon presence alone does not prove all three providers were fully functional. The existing deeper `apk-2026-02-02.md` recovery note should remain the source for behavioral/module-level interpretation.
 
 ## Recovery interpretation
 
-The most important transitions in this set are:
+The most important recovered transitions are:
 
 1. **2025-07-30 → 2025-08-06** — incremental UI/checklist work.
-2. **2025-08-06 → 2025-08-24** — major Android/runtime transition: SDK baseline changed and native SQLite was introduced.
-3. **2025-08-24 → 2025-08-31** — ObjectBox JNI appears alongside SQLite, plus a new checkmark asset.
-4. **2025-08-31 → 2025-09-11** — same packaged file layout, but rebuilt application and native persistence binaries.
-5. **2025-09-11 → 2025-09-23** — major auth/dependency transition: ObjectBox disappears; Amplify Cognito, secure storage, Google sign-in/credentials support and multidex appear.
-6. **2025-09-23 → 2025-10-11** — document/action UI assets are added without another major packaging shift.
-7. **2025-10-11 → 2025-10-26** — another substantial expansion: save action, Amplify Authenticator social assets, DataStore, Apache Tika and URL-launcher WebView support.
-8. **2025-10-26 → 2025-10-27** — application-code revision with stable packaged layout.
-9. **2025-10-27 standard → dark-theme variant** — only Dart AOT `libapp.so` payloads differ; all other packaged content matches.
-10. **2025-10-27 → 2025-10-28** — another AOT-code-only revision with unchanged package layout.
-11. **2025-10-28 → 2025-10-30** — native auth footprint is simplified; Google Sign-In / AndroidX Credentials integration is removed while Amplify assets remain.
-12. **2025-10-30 → 2025-12-30** — major OCR expansion with bundled Google ML Kit models/native OCR pipeline and new people/travel UI assets.
-13. **2025-12-30 → 2026-01-12** — camera/gallery Android integration appears on top of the OCR stack.
+2. **2025-08-06 → 2025-08-24** — SDK/runtime transition and SQLite introduction.
+3. **2025-08-24 → 2025-08-31** — ObjectBox introduced alongside SQLite.
+4. **2025-08-31 → 2025-09-23** — later rebuild followed by major auth/dependency migration to Amplify/Cognito.
+5. **2025-09-23 → 2025-10-26** — document/actions, DataStore, Tika and Authenticator expansion.
+6. **2025-10-26 → 2025-10-30** — rapid AOT/theme iterations, then simplification of native Google credential/sign-in footprint.
+7. **2025-10-30 → 2025-12-30** — major OCR/document-processing expansion.
+8. **2025-12-30 → 2026-01-12** — camera/gallery input added on top of OCR.
+9. **2026-01-12 → 2026-01-21** — **package/application identity changes**, versionName resets to `0.5.0`, and local notifications/WorkManager scheduling arrive.
+10. **2026-01-21 → 2026-01-28** — broad navigation/settings/document UI polish.
+11. **2026-01-28 → 2026-02-02** — contacts import, phone-field assets and expanded identity/auth UI.
 
-These observations describe artifacts actually present in the APKs. They should not be interpreted as complete source-level change logs: Dart application code is AOT-compiled and exact source cannot be losslessly reconstructed from the APK alone.
+These observations describe artifacts actually present in the APKs. They are not complete source-level changelogs: Dart application code is AOT-compiled and exact source cannot be losslessly reconstructed from an APK alone.
 
 ## Update procedure for future historical APKs
 
@@ -188,8 +159,9 @@ For every newly supplied historical APK:
 4. inventory Flutter assets, Android manifest components and native libraries;
 5. compare archive entries and compiled binaries with the nearest previous build;
 6. add the build chronologically to this registry;
-7. create a dedicated APK recovery note when the build contains materially new recoverable behavior or architecture.
+7. mark exact duplicate uploads as aliases rather than separate builds;
+8. create/update a dedicated recovery note when the build contains materially new recoverable behavior or architecture.
 
 ## Related recovery reference
 
-See also `apk-2026-02-02.md` for the later recovered APK reference and the richer feature/module inventory extracted from that build.
+See `apk-2026-02-02.md` for the richer feature/module inventory extracted from the 02.02.2026 build. The uploaded `02.02.2026(1).apk` has the same SHA-256 as that reference.
