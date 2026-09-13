@@ -1,0 +1,68 @@
+# Historical Check2GO Amplify Gen 1 domain schema recovered from AWS.
+# Security note: the historical source also contained a global test-only public
+# authorization override. It is intentionally omitted from this repository copy
+# and must not be restored without a security review.
+
+type TravelAmplify @model @auth(rules: [{ allow: owner }]) {
+    id: ID!
+    name: String!
+    from: String!
+    to: String!
+    dateDeparture: AWSDateTime!
+    dateReturn: AWSDateTime
+    hasPets: Boolean!
+    travelers: [TravelerAmplify]! @manyToMany(relationName: "TravelerTravelAmplify")
+    checklists: [TaskAmplify]! @hasMany(indexName: "byTask", fields: ["id"])
+}
+
+type TravelerAmplify @model @auth(rules: [{ allow: owner }]) {
+    id: ID!
+    fullName: String!
+    gender: GenderAmplify!
+    familyAffination: FamilyAmplify!
+    dateOfBirth: AWSDateTime!
+    deleted: Boolean!
+    travels: [TravelAmplify] @manyToMany(relationName: "TravelerTravelAmplify")
+}
+
+enum GenderAmplify {
+    UNKNOWN
+    MALE
+    FEMALE
+}
+
+enum FamilyAmplify {
+    UNKNOWN
+    SPOUSE
+    CHILD
+    PARENT
+    SIBLING
+    GRANDPARENT
+    GRANDCHILD
+    COUSIN
+    AUNT_UNCLE
+    NIECE_NEPHEW
+    OTHER
+}
+
+type TaskTemplateAmplify @model @auth(rules: [{ allow: owner }]) {
+    id: ID!
+    name: String!
+    isCustom: Boolean!
+    includedFiles: Boolean!
+    parentId: ID
+    color: Int
+}
+
+type TaskAmplify @model @auth(rules: [{ allow: owner }]) {
+    id: ID!
+    name: String!
+    isCustom: Boolean!
+    includedFiles: Boolean!
+    filesPaths: [String!]
+    completed: Boolean!
+    color: Int
+    parentId: ID
+    travelId: ID @index(name: "byTask")
+    travel: TravelAmplify @belongsTo(fields: ["travelId"])
+}
