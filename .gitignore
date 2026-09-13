@@ -1,0 +1,48 @@
+# Flutter / Dart
+.dart_tool/
+.packages
+.pub/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+coverage/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Android / signing
+android/.gradle/
+android/local.properties
+*.jks
+*.keystore
+key.properties
+
+# iOS
+Pods/
+DerivedData/
+*.xcworkspace/xcuserdata/
+
+# Secrets / local config
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+*.mobileprovision
+aws-exports.*
+amplifyconfiguration.*
+secrets.*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Recovery artifacts / binaries
+*.apk
+*.aab
+*.ipa
+*.zip
+legacy/raw/
