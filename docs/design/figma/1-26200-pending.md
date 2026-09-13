@@ -1,10 +1,10 @@
-# Figma Node 1:26200 — Pending Direct MCP Read
+# Figma Node 1:26200 — Screen Exports Available
 
 Source file: `FVVplMUExRWDAY1npMxRmj` — Check2Go
 
 Original node ID: `1:26200`.
 
-Direct Figma MCP reading of this node was attempted after the connected View seat had reached its MCP read-call limit, so no direct node metadata/context was captured in that attempt.
+The earlier recovery attempt was blocked by the connected View seat's MCP read-call limit. On 2026-09-13, direct page metadata was successfully read and all 49 top-level screen frames were exported. See [the image catalog](screens/README.md) for the images and individual Figma links.
 
 ## Current substitute source
 
@@ -15,7 +15,7 @@ A 49-page PDF export of the Check2GO mobile screens was provided and fully parse
 
 ## Follow-up
 
-When Figma MCP access resumes, re-read node `1:26200`, compare it against the PDF-derived screen inventory, and record any details that PDF cannot preserve well, including:
+For implementation, inspect individual frames with design-context tools, compare them against the PDF-derived screen inventory, and record details that static image exports do not fully preserve, including:
 - exact component/variant structure;
 - auto-layout and constraints;
 - exact spacing and sizing;

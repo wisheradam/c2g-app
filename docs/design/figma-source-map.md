@@ -94,9 +94,9 @@ The same page also contains older/conceptual palette notes with different values
 
 ## Node `1:26200`
 
-Not yet read through MCP because the connected Figma View seat hit its MCP read-call limit.
+Direct page metadata was read through Figma MCP on 2026-09-13. The page is named `Screens` and contains 49 top-level screen frames.
 
-A PDF export of the mobile screens has been provided separately and is now the primary visual recovery source until direct Figma reads are available again.
+Original screen image exports and per-screen Figma links are available in [the screen catalog](figma/screens/README.md). These images preserve the configured Figma export formats and include historical variants. They are a visual snapshot, not an editable `.fig` backup or a complete component/prototype specification.
 
 ## Implementation mapping
 
