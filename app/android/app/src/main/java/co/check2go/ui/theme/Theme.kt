@@ -14,6 +14,7 @@ private val LightColors = lightColorScheme(
     onBackground = C2GLightTextPrimary,
     surface = C2GLightBackground,
     onSurface = C2GLightTextPrimary,
+    onSurfaceVariant = C2GTextSecondary,
     error = C2GError
 )
 
@@ -25,6 +26,7 @@ private val DarkColors = darkColorScheme(
     surface = C2GDarkBackground,
     onSurface = C2GDarkTextPrimary,
     surfaceVariant = C2GDarkDisabledSurface,
+    onSurfaceVariant = C2GTextSecondary,
     error = C2GError
 )
 

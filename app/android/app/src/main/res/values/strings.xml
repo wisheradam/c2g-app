@@ -1,4 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Check2GO</string>
+    <string name="home_hero_title">Start your first journey!</string>
+    <!-- Temporary source-level copy until the exact design copy is recovered. -->
+    <string name="home_supporting_copy">Add trips to the app.</string>
+    <string name="home_add_trip">Add a trip</string>
+    <string name="home_illustration_placeholder">Illustration placeholder</string>
+    <string name="home_quick_add">Quick add</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_documents">Documents</string>
+    <string name="nav_checklists">Checklists</string>
+    <string name="nav_events">Events</string>
 </resources>
