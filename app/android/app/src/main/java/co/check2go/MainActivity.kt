@@ -13,7 +13,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             Check2GoTheme {
-                Check2GoApp(onTripDatesNext = { _, _ -> })
+                Check2GoApp(onTripCreateComplete = { _, _, _ -> })
             }
         }
     }
