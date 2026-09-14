@@ -1,6 +1,5 @@
 package co.check2go.feature.home
 
-import androidx.annotation.StringRes
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,9 +13,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -35,13 +31,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import co.check2go.R
 import co.check2go.ui.theme.Check2GoTheme
-
-enum class HomeDestination(@StringRes val labelRes: Int) {
-    Home(R.string.nav_home),
-    Documents(R.string.nav_documents),
-    Checklists(R.string.nav_checklists),
-    Events(R.string.nav_events)
-}
 
 /**
  * Shared screen ID: HOME_EMPTY.
@@ -148,33 +137,6 @@ private fun IllustrationPlaceholder() {
             style = MaterialTheme.typography.labelLarge,
             textAlign = TextAlign.Center
         )
-    }
-}
-
-@Composable
-private fun HomeNavigationBar(
-    onDestinationSelected: (HomeDestination) -> Unit
-) {
-    NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
-        HomeDestination.entries.forEach { destination ->
-            val label = stringResource(destination.labelRes)
-            NavigationBarItem(
-                selected = destination == HomeDestination.Home,
-                onClick = { onDestinationSelected(destination) },
-                icon = {
-                    // Temporary glyph until the exact tab icon set is recovered from design assets.
-                    Text(text = label.take(1), fontWeight = FontWeight.SemiBold)
-                },
-                label = { Text(text = label) },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = MaterialTheme.colorScheme.primary,
-                    selectedTextColor = MaterialTheme.colorScheme.primary,
-                    indicatorColor = MaterialTheme.colorScheme.surface,
-                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            )
-        }
     }
 }
 
