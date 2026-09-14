@@ -1,0 +1,19 @@
+---
+description: Check2GO Android native development rules
+globs: app/android/**
+alwaysApply: true
+---
+
+# Check2GO Android
+
+- Android is Kotlin + Jetpack Compose.
+- Do not modify `app/ios/` for Android tasks.
+- Historical Flutter/APK material is reference only.
+- Read `docs/source-priority.md`, `docs/platform-parity.md`, `docs/design/design-tokens.md`, and `docs/android/architecture.md` before architectural changes.
+- Preserve package/application id `co.check2go` unless explicitly approved.
+- Keep business rules outside composables.
+- Prefer immutable UI state and Android-native state holders.
+- Do not invent missing Figma values. Mark temporary UI clearly when exact values are unknown.
+- Do not connect historical AWS environments or add credentials without explicit approval.
+- Never commit secrets, API keys, tokens, `.env`, keystores, signing files, or production user data.
+- Use an `android/<task>` branch and open a PR; do not develop directly on `main`.
