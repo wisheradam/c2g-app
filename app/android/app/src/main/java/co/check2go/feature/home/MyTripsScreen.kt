@@ -35,6 +35,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import co.check2go.R
+import co.check2go.core.design.AppDestination
+import co.check2go.core.design.AppNavigationBar
 import co.check2go.feature.trip.CompletedTrip
 import co.check2go.feature.trip.TripFilter
 import co.check2go.ui.theme.Check2GoTheme
@@ -54,7 +56,7 @@ fun MyTripsScreen(
     onFilterChange: (TripFilter) -> Unit,
     onAddTrip: () -> Unit,
     onQuickAdd: () -> Unit,
-    onDestinationSelected: (HomeDestination) -> Unit,
+    onDestinationSelected: (AppDestination) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val quickAddLabel = stringResource(R.string.home_quick_add)
@@ -82,7 +84,7 @@ fun MyTripsScreen(
             )
         },
         bottomBar = {
-            HomeNavigationBar(onDestinationSelected = onDestinationSelected)
+            AppNavigationBar(selected = AppDestination.Home, onDestinationSelected = onDestinationSelected)
         },
         floatingActionButton = {
             FloatingActionButton(

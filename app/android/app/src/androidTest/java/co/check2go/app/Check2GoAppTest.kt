@@ -1,10 +1,16 @@
 package co.check2go.app
 
+import android.view.KeyEvent
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotSelected
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
+import androidx.test.platform.app.InstrumentationRegistry
 import co.check2go.feature.trip.TripAdventureType
 import co.check2go.feature.trip.TripDatesDraft
 import co.check2go.feature.trip.TripDestinationDraft
@@ -229,5 +235,90 @@ class Check2GoAppTest {
 
         composeRule.onNodeWithText("Summer trip").assertIsDisplayed()
         composeRule.onNodeWithText("Winter escape").assertIsDisplayed()
+    }
+
+    @Test
+    fun tappingChecklistsTabFromHomeOpensChecklistsEmptyScreen() {
+        composeRule.setContent {
+            Check2GoTheme {
+                Check2GoApp(onTripCreateComplete = { _, _, _ -> })
+            }
+        }
+
+        composeRule.onNodeWithText("Checklists").performClick()
+
+        composeRule.onNodeWithText("No active checklists").assertIsDisplayed()
+    }
+
+    @Test
+    fun checklistsTabShowsSelectedStateAndHomeTabDoesNot() {
+        composeRule.setContent {
+            Check2GoTheme {
+                Check2GoApp(onTripCreateComplete = { _, _, _ -> })
+            }
+        }
+
+        composeRule.onNodeWithText("Checklists").performClick()
+
+        composeRule.onNodeWithTag("nav_checklists").assertIsSelected()
+        composeRule.onNodeWithTag("nav_home").assertIsNotSelected()
+    }
+
+    @Test
+    fun backFromChecklistsReturnsToHome() {
+        composeRule.setContent {
+            Check2GoTheme {
+                Check2GoApp(onTripCreateComplete = { _, _, _ -> })
+            }
+        }
+
+        composeRule.onNodeWithText("Checklists").performClick()
+        composeRule.onNodeWithText("No active checklists").assertIsDisplayed()
+
+        InstrumentationRegistry.getInstrumentation().sendKeyDownUpSync(KeyEvent.KEYCODE_BACK)
+
+        composeRule.onNodeWithText("Start your first journey!").assertIsDisplayed()
+        composeRule.onNodeWithTag("nav_home").assertIsSelected()
+    }
+
+    @Test
+    fun myTripsStateIsRetainedWhenSwitchingToChecklistsAndBack() {
+        composeRule.setContent {
+            Check2GoTheme {
+                Check2GoApp(onTripCreateComplete = { _, _, _ -> })
+            }
+        }
+
+        fillDestinationDatesAndAdvanceToTravelers()
+        composeRule.onNodeWithText("Complete").performClick()
+        composeRule.onNodeWithText("Summer trip").assertIsDisplayed()
+
+        composeRule.onNodeWithText("Checklists").performClick()
+        composeRule.onNodeWithText("No active checklists").assertIsDisplayed()
+
+        composeRule.onNodeWithText("Home").performClick()
+
+        composeRule.onNodeWithText("My trips").assertIsDisplayed()
+        composeRule.onNodeWithText("Summer trip").assertIsDisplayed()
+    }
+
+    @Test
+    fun createChecklistAndQuickAddFromAppReachSameBoundaryCallback() {
+        var checklistRequestCount = 0
+
+        composeRule.setContent {
+            Check2GoTheme {
+                Check2GoApp(
+                    onTripCreateComplete = { _, _, _ -> },
+                    onCreateChecklistRequested = { checklistRequestCount++ }
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("Checklists").performClick()
+        composeRule.onNodeWithText("Create checklist").performClick()
+        composeRule.onNodeWithContentDescription("Quick add").performClick()
+
+        assertEquals(2, checklistRequestCount)
     }
 }

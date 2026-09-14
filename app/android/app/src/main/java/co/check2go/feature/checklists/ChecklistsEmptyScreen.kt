@@ -1,17 +1,13 @@
-package co.check2go.feature.home
+package co.check2go.feature.checklists
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -24,7 +20,6 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -40,15 +35,17 @@ import co.check2go.core.design.AppNavigationBar
 import co.check2go.ui.theme.Check2GoTheme
 
 /**
- * Shared screen ID: HOME_EMPTY.
+ * Shared screen ID: CHECKLISTS_EMPTY (docs/screen-inventory.md "Checklists — main tab > Empty
+ * state"; docs/flows.md Flow 5, steps 1-3).
  *
- * Navigation and business behavior are supplied by the caller so this composable remains a
- * stateless representation of the verified empty Home state.
+ * Stateless: navigation and checklist creation are supplied by the caller. [onCreateChecklist] and
+ * [onQuickAdd] intentionally reach the same temporary callback boundary, since CHECKLIST_CREATE
+ * (Flow 7) is out of scope for this screen.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeEmptyScreen(
-    onAddTrip: () -> Unit,
+fun ChecklistsEmptyScreen(
+    onCreateChecklist: () -> Unit,
     onQuickAdd: () -> Unit,
     onDestinationSelected: (AppDestination) -> Unit,
     modifier: Modifier = Modifier
@@ -61,18 +58,10 @@ fun HomeEmptyScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Image(
-                            painter = painterResource(R.drawable.ic_check2go_mark),
-                            contentDescription = stringResource(R.string.app_logo_content_description),
-                            modifier = Modifier.size(28.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = stringResource(R.string.app_name),
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
+                    Text(
+                        text = stringResource(R.string.checklists_title),
+                        fontWeight = FontWeight.SemiBold
+                    )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background,
@@ -81,7 +70,10 @@ fun HomeEmptyScreen(
             )
         },
         bottomBar = {
-            AppNavigationBar(selected = AppDestination.Home, onDestinationSelected = onDestinationSelected)
+            AppNavigationBar(
+                selected = AppDestination.Checklists,
+                onDestinationSelected = onDestinationSelected
+            )
         },
         floatingActionButton = {
             FloatingActionButton(
@@ -94,10 +86,7 @@ fun HomeEmptyScreen(
                     role = Role.Button
                 }
             ) {
-                Text(
-                    text = "+",
-                    style = MaterialTheme.typography.headlineMedium
-                )
+                Text(text = "+", style = MaterialTheme.typography.headlineMedium)
             }
         }
     ) { contentPadding ->
@@ -111,7 +100,7 @@ fun HomeEmptyScreen(
         ) {
             IllustrationPlaceholder()
             Text(
-                text = stringResource(R.string.home_hero_title),
+                text = stringResource(R.string.checklists_empty_hero_title),
                 modifier = Modifier.padding(top = 32.dp),
                 color = MaterialTheme.colorScheme.onBackground,
                 style = MaterialTheme.typography.headlineSmall,
@@ -119,20 +108,21 @@ fun HomeEmptyScreen(
                 textAlign = TextAlign.Center
             )
             Text(
-                text = stringResource(R.string.home_supporting_copy),
+                text = stringResource(R.string.checklists_empty_supporting_copy),
                 modifier = Modifier.padding(top = 12.dp),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Center
             )
             Button(
-                onClick = onAddTrip,
+                onClick = onCreateChecklist,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 32.dp)
             ) {
-                Text(text = stringResource(R.string.home_add_trip))
+                Text(text = stringResource(R.string.checklists_create_checklist))
             }
+            TeamChecklistsPromo(modifier = Modifier.padding(top = 24.dp))
         }
     }
 }
@@ -146,7 +136,7 @@ private fun IllustrationPlaceholder() {
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = stringResource(R.string.home_illustration_placeholder),
+            text = stringResource(R.string.checklists_illustration_placeholder),
             modifier = Modifier.padding(16.dp),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.labelLarge,
@@ -155,18 +145,51 @@ private fun IllustrationPlaceholder() {
     }
 }
 
-@Preview(showBackground = true)
+/**
+ * Neutral, non-transactional placeholder for the "Team checklists" promo referenced in
+ * docs/screen-inventory.md (Checklists empty state) and docs/flows.md Flow 11. The historical
+ * design shows a $5/month, 7-day-trial upsell (docs/screen-inventory.md section 9); that pricing
+ * and entitlement flow is unapproved, so this copy carries no price, subscription action, or
+ * availability claim.
+ */
 @Composable
-private fun HomeEmptyLightPreview() {
-    Check2GoTheme(darkTheme = false) {
-        HomeEmptyScreen({}, {}, {})
+private fun TeamChecklistsPromo(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .border(width = 1.dp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Text(
+            text = stringResource(R.string.checklists_team_promo_title),
+            color = MaterialTheme.colorScheme.onBackground,
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.SemiBold,
+            textAlign = TextAlign.Center
+        )
+        Text(
+            text = stringResource(R.string.checklists_team_promo_body),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Center
+        )
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun HomeEmptyDarkPreview() {
+private fun ChecklistsEmptyLightPreview() {
+    Check2GoTheme(darkTheme = false) {
+        ChecklistsEmptyScreen({}, {}, {})
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ChecklistsEmptyDarkPreview() {
     Check2GoTheme(darkTheme = true) {
-        HomeEmptyScreen({}, {}, {})
+        ChecklistsEmptyScreen({}, {}, {})
     }
 }
