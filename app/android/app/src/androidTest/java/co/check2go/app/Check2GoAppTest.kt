@@ -163,4 +163,71 @@ class Check2GoAppTest {
         assertEquals(TripDatesDraft(false, "2026-10-01", "2026-10-10", false), dates)
         assertEquals(TripTravelersDraft(TripAdventureType.Group, true), travelers)
     }
+
+    @Test
+    fun completingTripNavigatesToMyTripsWithVisibleSummary() {
+        composeRule.setContent {
+            Check2GoTheme {
+                Check2GoApp(onTripCreateComplete = { _, _, _ -> })
+            }
+        }
+
+        fillDestinationDatesAndAdvanceToTravelers()
+        composeRule.onNodeWithText("Complete").performClick()
+
+        composeRule.onNodeWithText("My trips").assertIsDisplayed()
+        composeRule.onNodeWithText("Summer trip").assertIsDisplayed()
+        composeRule.onNodeWithText("Israel → Italy").assertIsDisplayed()
+        composeRule.onNodeWithText("2026-10-01 – 2026-10-10").assertIsDisplayed()
+    }
+
+    @Test
+    fun bothActiveAndAllFiltersShowTheCompletedTrip() {
+        composeRule.setContent {
+            Check2GoTheme {
+                Check2GoApp(onTripCreateComplete = { _, _, _ -> })
+            }
+        }
+
+        fillDestinationDatesAndAdvanceToTravelers()
+        composeRule.onNodeWithText("Complete").performClick()
+
+        composeRule.onNodeWithText("All").performClick()
+        composeRule.onNodeWithText("Summer trip").assertIsDisplayed()
+
+        composeRule.onNodeWithText("Active").performClick()
+        composeRule.onNodeWithText("Summer trip").assertIsDisplayed()
+    }
+
+    @Test
+    fun startingAnotherTripFromMyTripsResetsDraftAndKeepsCompletedTrip() {
+        composeRule.setContent {
+            Check2GoTheme {
+                Check2GoApp(onTripCreateComplete = { _, _, _ -> })
+            }
+        }
+
+        fillDestinationDatesAndAdvanceToTravelers()
+        composeRule.onNodeWithText("Complete").performClick()
+        composeRule.onNodeWithText("Summer trip").assertIsDisplayed()
+
+        composeRule.onNodeWithText("Add a trip").performClick()
+
+        composeRule.onNodeWithText("Choose your destination country").assertIsDisplayed()
+        composeRule.onNodeWithText("Italy").assertDoesNotExist()
+        composeRule.onNodeWithText("Israel").assertDoesNotExist()
+        composeRule.onNodeWithText("Summer trip").assertDoesNotExist()
+
+        composeRule.onNodeWithText("Destination country").performTextInput("Norway")
+        composeRule.onNodeWithText("Departure country").performTextInput("Spain")
+        composeRule.onNodeWithText("Trip name").performTextInput("Winter escape")
+        composeRule.onNodeWithText("Start").performClick()
+        composeRule.onNodeWithText("Departure date").performTextInput("2026-12-05")
+        composeRule.onNodeWithText("Return date").performTextInput("2026-12-12")
+        composeRule.onNodeWithText("Next step").performClick()
+        composeRule.onNodeWithText("Complete").performClick()
+
+        composeRule.onNodeWithText("Summer trip").assertIsDisplayed()
+        composeRule.onNodeWithText("Winter escape").assertIsDisplayed()
+    }
 }
