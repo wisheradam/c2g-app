@@ -20,4 +20,22 @@
     <string name="trip_start">Start</string>
     <string name="trip_back">Back</string>
     <string name="trip_image_placeholder">Travel image placeholder</string>
+    <string name="trip_create_dates_title">Travel dates</string>
+    <string name="trip_step_destination">Destination</string>
+    <string name="trip_step_dates">Dates</string>
+    <string name="trip_step_travelers">Travelers</string>
+    <string name="trip_quick_fill_title">Quick Fill</string>
+    <string name="trip_load_ticket">Load your ticket</string>
+    <!-- Temporary: no file picker, OCR or backend is wired up yet. -->
+    <string name="trip_load_ticket_description">Loading a ticket is not available yet</string>
+    <string name="trip_one_way_label">One-way trip</string>
+    <string name="trip_one_way_no">No</string>
+    <string name="trip_one_way_yes">Yes</string>
+    <string name="trip_departure_date">Departure date</string>
+    <string name="trip_return_date">Return date</string>
+    <string name="trip_date_placeholder">YYYY-MM-DD</string>
+    <!-- Temporary: calendar picker screen (TRIP_CREATE_DATES date picker sheet) is out of scope for this task. -->
+    <string name="trip_date_field_helper">Enter the date manually. A calendar picker is not available yet.</string>
+    <string name="trip_reminder_label">Travel reminder</string>
+    <string name="trip_next_step">Next step</string>
 </resources>
