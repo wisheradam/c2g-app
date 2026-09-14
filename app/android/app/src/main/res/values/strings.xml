@@ -38,4 +38,15 @@
     <string name="trip_date_field_helper">Enter the date manually. A calendar picker is not available yet.</string>
     <string name="trip_reminder_label">Travel reminder</string>
     <string name="trip_next_step">Next step</string>
+    <string name="trip_create_travelers_title">Travelers</string>
+    <string name="trip_solo_adventure">Solo adventure</string>
+    <string name="trip_group_adventure">Group adventure</string>
+    <string name="trip_my_travelers_title">My travelers</string>
+    <!-- Temporary: traveler profiles, editing and persistence are not implemented yet. -->
+    <string name="trip_my_travelers_placeholder">Traveler profiles aren\'t available yet. This section is a placeholder until traveler management is implemented.</string>
+    <string name="trip_add_traveler">Add traveler</string>
+    <string name="trip_pets_label">Traveling with pets?</string>
+    <string name="trip_pets_no">No</string>
+    <string name="trip_pets_yes">Yes</string>
+    <string name="trip_complete">Complete</string>
 </resources>
