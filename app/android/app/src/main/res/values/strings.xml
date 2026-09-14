@@ -59,4 +59,14 @@
     <string name="trip_dates_not_set">Dates not set</string>
     <string name="trip_dates_round_trip_format">%1$s – %2$s</string>
     <string name="trip_route_format">%1$s → %2$s</string>
+    <string name="checklists_title">Checklists</string>
+    <string name="checklists_empty_hero_title">No active checklists</string>
+    <!-- Temporary source-level copy until the exact design copy is recovered. -->
+    <string name="checklists_empty_supporting_copy">Create a checklist to start preparing for your trip.</string>
+    <string name="checklists_create_checklist">Create checklist</string>
+    <string name="checklists_illustration_placeholder">Illustration placeholder</string>
+    <!-- Neutral, non-priced placeholder copy: docs/screen-inventory.md section 9 shows a historical
+         $5/month, 7-day-trial upsell that has not been approved as current product/pricing. -->
+    <string name="checklists_team_promo_title">Team checklists</string>
+    <string name="checklists_team_promo_body">Share checklist preparation with your travel companions.</string>
 </resources>

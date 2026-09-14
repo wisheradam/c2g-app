@@ -6,6 +6,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import co.check2go.core.design.AppDestination
+import co.check2go.feature.checklists.ChecklistsEmptyScreen
 import co.check2go.feature.home.HomeEmptyScreen
 import co.check2go.feature.home.MyTripsScreen
 import co.check2go.feature.trip.CompletedTrip
@@ -19,12 +21,20 @@ import co.check2go.feature.trip.TripDestinationDraft
 import co.check2go.feature.trip.TripFilter
 import co.check2go.feature.trip.TripTravelersDraft
 
-private enum class AppScreen { Home, TripDestination, TripDates, TripTravelers }
+private enum class AppScreen { Home, Checklists, TripDestination, TripDates, TripTravelers }
 
-/** Minimal app-level navigation for HOME_EMPTY/HOME_TRIPS -> TRIP_CREATE_DESTINATION -> TRIP_CREATE_DATES -> TRIP_CREATE_TRAVELERS. */
+/**
+ * Minimal app-level navigation for HOME_EMPTY/HOME_TRIPS <-> CHECKLISTS_EMPTY and
+ * HOME_EMPTY/HOME_TRIPS -> TRIP_CREATE_DESTINATION -> TRIP_CREATE_DATES -> TRIP_CREATE_TRAVELERS.
+ *
+ * [onCreateChecklistRequested] is the temporary CHECKLIST_CREATE (Flow 7) boundary: both the
+ * CHECKLISTS_EMPTY "Create checklist" CTA and its quick-add FAB reach it, since the create-checklist
+ * form is out of scope for this screen.
+ */
 @Composable
 fun Check2GoApp(
-    onTripCreateComplete: (TripDestinationDraft, TripDatesDraft, TripTravelersDraft) -> Unit
+    onTripCreateComplete: (TripDestinationDraft, TripDatesDraft, TripTravelersDraft) -> Unit,
+    onCreateChecklistRequested: () -> Unit = {}
 ) {
     var screen by rememberSaveable { mutableStateOf(AppScreen.Home) }
 
@@ -63,13 +73,23 @@ fun Check2GoApp(
         screen = AppScreen.TripDestination
     }
 
+    // Documents/Events have no DOCUMENTS_HOME/EVENTS_HOME screen yet (docs/screen-inventory.md),
+    // so selecting them is a no-op boundary rather than switching to a fake screen.
+    val onAppDestinationSelected: (AppDestination) -> Unit = { destination ->
+        when (destination) {
+            AppDestination.Home -> screen = AppScreen.Home
+            AppDestination.Checklists -> screen = AppScreen.Checklists
+            AppDestination.Documents, AppDestination.Events -> {}
+        }
+    }
+
     when (screen) {
         AppScreen.Home -> {
             if (trips.isEmpty()) {
                 HomeEmptyScreen(
                     onAddTrip = startNewTripDraft,
                     onQuickAdd = startNewTripDraft,
-                    onDestinationSelected = {}
+                    onDestinationSelected = onAppDestinationSelected
                 )
             } else {
                 MyTripsScreen(
@@ -78,9 +98,21 @@ fun Check2GoApp(
                     onFilterChange = { tripFilter = it },
                     onAddTrip = startNewTripDraft,
                     onQuickAdd = startNewTripDraft,
-                    onDestinationSelected = {}
+                    onDestinationSelected = onAppDestinationSelected
                 )
             }
+        }
+
+        AppScreen.Checklists -> {
+            // Checklists is a peer main tab reached from the shared bottom nav, not a pushed
+            // screen, so Back is handled purely via BackHandler (no in-screen back affordance) and
+            // returns to Home rather than the default system behavior (e.g. exiting the app).
+            BackHandler(onBack = { screen = AppScreen.Home })
+            ChecklistsEmptyScreen(
+                onCreateChecklist = onCreateChecklistRequested,
+                onQuickAdd = onCreateChecklistRequested,
+                onDestinationSelected = onAppDestinationSelected
+            )
         }
 
         AppScreen.TripDestination -> {
