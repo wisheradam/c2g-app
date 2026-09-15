@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Official Check2GO logo mark colors (source: design-assets/logo/C2Glogo.svg). Fixed
+         brand colors, not design-token roles, so they are kept separate from ui/theme/Color.kt. -->
+    <color name="c2g_logo_blue">#114DDC</color>
+    <color name="c2g_logo_green">#27DC11</color>
+
+    <!-- Launcher icon background. Matches the light-theme `background` token in
+         docs/design/design-tokens.md; the launcher icon does not follow in-app dark theme. -->
+    <color name="ic_launcher_background">#F4F7FA</color>
+</resources>

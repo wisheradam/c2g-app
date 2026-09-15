@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Check2GO</string>
+    <string name="app_logo_content_description">Check2GO logo</string>
     <string name="home_hero_title">Start your first journey!</string>
     <!-- Temporary source-level copy until the exact design copy is recovered. -->
     <string name="home_supporting_copy">Add trips to the app.</string>
@@ -38,4 +39,58 @@
     <string name="trip_date_field_helper">Enter the date manually. A calendar picker is not available yet.</string>
     <string name="trip_reminder_label">Travel reminder</string>
     <string name="trip_next_step">Next step</string>
+    <string name="trip_create_travelers_title">Travelers</string>
+    <string name="trip_solo_adventure">Solo adventure</string>
+    <string name="trip_group_adventure">Group adventure</string>
+    <string name="trip_my_travelers_title">My travelers</string>
+    <!-- Temporary: traveler profiles, editing and persistence are not implemented yet. -->
+    <string name="trip_my_travelers_placeholder">Traveler profiles aren\'t available yet. This section is a placeholder until traveler management is implemented.</string>
+    <string name="trip_add_traveler">Add traveler</string>
+    <string name="trip_pets_label">Traveling with pets?</string>
+    <string name="trip_pets_no">No</string>
+    <string name="trip_pets_yes">Yes</string>
+    <string name="trip_complete">Complete</string>
+    <string name="trip_my_trips_title">My trips</string>
+    <string name="trip_filter_active">Active</string>
+    <string name="trip_filter_all">All</string>
+    <string name="trip_card_image_placeholder">Trip image placeholder</string>
+    <!-- Temporary: no archiving/upcoming/past business rule exists yet, see docs/screen-inventory.md. -->
+    <string name="trip_status_added">Trip added</string>
+    <string name="trip_dates_not_set">Dates not set</string>
+    <string name="trip_dates_round_trip_format">%1$s – %2$s</string>
+    <string name="trip_route_format">%1$s → %2$s</string>
+    <string name="checklists_title">Checklists</string>
+    <string name="checklists_empty_hero_title">No active checklists</string>
+    <!-- Temporary source-level copy until the exact design copy is recovered. -->
+    <string name="checklists_empty_supporting_copy">Create a checklist to start preparing for your trip.</string>
+    <string name="checklists_create_checklist">Create checklist</string>
+    <string name="checklists_illustration_placeholder">Illustration placeholder</string>
+    <!-- Neutral, non-priced placeholder copy: docs/screen-inventory.md section 9 shows a historical
+         $5/month, 7-day-trial upsell that has not been approved as current product/pricing. -->
+    <string name="checklists_team_promo_title">Team checklists</string>
+    <string name="checklists_team_promo_body">Share checklist preparation with your travel companions.</string>
+    <string name="checklist_create_title">Create checklist</string>
+    <string name="checklist_name_label">Checklist name</string>
+    <string name="checklist_sections_title">Sections</string>
+    <string name="checklist_section_name_label">Section name</string>
+    <string name="checklist_add_section">Add section</string>
+    <string name="checklist_remove_section_description">Remove section %1$s</string>
+    <string name="checklist_add_item_title">New item</string>
+    <string name="checklist_item_name_label">Item name</string>
+    <string name="checklist_item_section_label">Section</string>
+    <string name="checklist_no_section">No section</string>
+    <string name="checklist_include_file_label">Include file</string>
+    <string name="checklist_item_includes_file_badge">Includes a file</string>
+    <string name="checklist_add_item">Add item</string>
+    <string name="checklist_items_title">Items</string>
+    <string name="checklist_remove">Remove</string>
+    <string name="checklist_remove_item_description">Remove item %1$s</string>
+    <string name="checklist_save">Save changes</string>
+    <!-- Neutral placeholder context: trip linking (docs/flows.md Flow 7, step 4) is out of scope
+         for this task, so every locally saved checklist currently shows the same personal context. -->
+    <string name="checklists_personal_context">Personal checklist</string>
+    <string name="checklists_completion_format">%1$d%% complete</string>
+    <!-- Temporary: real file attachment (picker/storage/backend) is not implemented yet. -->
+    <string name="checklist_detail_upload_file_unavailable">Upload file: not available yet.</string>
+    <string name="checklist_detail_no_items">No items in this checklist yet.</string>
 </resources>
