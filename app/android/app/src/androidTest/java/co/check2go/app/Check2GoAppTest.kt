@@ -11,6 +11,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.test.platform.app.InstrumentationRegistry
+import co.check2go.feature.checklists.ChecklistDraft
 import co.check2go.feature.trip.TripAdventureType
 import co.check2go.feature.trip.TripDatesDraft
 import co.check2go.feature.trip.TripDestinationDraft
@@ -303,22 +304,96 @@ class Check2GoAppTest {
     }
 
     @Test
-    fun createChecklistAndQuickAddFromAppReachSameBoundaryCallback() {
-        var checklistRequestCount = 0
+    fun createChecklistCtaOpensChecklistCreateScreen() {
+        composeRule.setContent {
+            Check2GoTheme {
+                Check2GoApp(onTripCreateComplete = { _, _, _ -> })
+            }
+        }
+
+        composeRule.onNodeWithText("Checklists").performClick()
+        composeRule.onNodeWithText("Create checklist").performClick()
+
+        composeRule.onNodeWithText("Checklist name").assertIsDisplayed()
+    }
+
+    @Test
+    fun checklistsQuickAddOpensChecklistCreateScreen() {
+        composeRule.setContent {
+            Check2GoTheme {
+                Check2GoApp(onTripCreateComplete = { _, _, _ -> })
+            }
+        }
+
+        composeRule.onNodeWithText("Checklists").performClick()
+        composeRule.onNodeWithContentDescription("Quick add").performClick()
+
+        composeRule.onNodeWithText("Checklist name").assertIsDisplayed()
+    }
+
+    @Test
+    fun backFromChecklistCreatePreservesDraftOnReopen() {
+        composeRule.setContent {
+            Check2GoTheme {
+                Check2GoApp(onTripCreateComplete = { _, _, _ -> })
+            }
+        }
+
+        composeRule.onNodeWithText("Checklists").performClick()
+        composeRule.onNodeWithText("Create checklist").performClick()
+        composeRule.onNodeWithText("Checklist name").performTextInput("Before leaving")
+
+        composeRule.onNodeWithText("Back").performClick()
+        composeRule.onNodeWithText("No active checklists").assertIsDisplayed()
+
+        composeRule.onNodeWithText("Create checklist").performClick()
+        composeRule.onNodeWithText("Before leaving").assertIsDisplayed()
+    }
+
+    @Test
+    fun saveChecklistEmitsDraftNavigatesToPopulatedListAndClearsDraft() {
+        var savedDraft: ChecklistDraft? = null
 
         composeRule.setContent {
             Check2GoTheme {
                 Check2GoApp(
                     onTripCreateComplete = { _, _, _ -> },
-                    onCreateChecklistRequested = { checklistRequestCount++ }
+                    onChecklistCreated = { savedDraft = it }
                 )
             }
         }
 
         composeRule.onNodeWithText("Checklists").performClick()
         composeRule.onNodeWithText("Create checklist").performClick()
-        composeRule.onNodeWithContentDescription("Quick add").performClick()
+        composeRule.onNodeWithText("Checklist name").performTextInput("Before leaving")
+        composeRule.onNodeWithText("Item name").performTextInput("Passport")
+        composeRule.onNodeWithText("Add item").performClick()
+        composeRule.onNodeWithText("Save changes").performClick()
 
-        assertEquals(2, checklistRequestCount)
+        assertEquals("Before leaving", savedDraft?.name)
+        assertEquals(1, savedDraft?.items?.size)
+        assertEquals("Passport", savedDraft?.items?.first()?.name)
+
+        composeRule.onNodeWithText("Before leaving").assertIsDisplayed()
+        composeRule.onNodeWithText("Personal checklist").assertIsDisplayed()
+        composeRule.onNodeWithText("0% complete").assertIsDisplayed()
+    }
+
+    @Test
+    fun creatingAnotherChecklistFromPopulatedListStartsWithAFreshDraft() {
+        composeRule.setContent {
+            Check2GoTheme {
+                Check2GoApp(onTripCreateComplete = { _, _, _ -> })
+            }
+        }
+
+        composeRule.onNodeWithText("Checklists").performClick()
+        composeRule.onNodeWithText("Create checklist").performClick()
+        composeRule.onNodeWithText("Checklist name").performTextInput("Before leaving")
+        composeRule.onNodeWithText("Save changes").performClick()
+
+        composeRule.onNodeWithText("Create checklist").performClick()
+
+        composeRule.onNodeWithText("Before leaving").assertDoesNotExist()
     }
 }
