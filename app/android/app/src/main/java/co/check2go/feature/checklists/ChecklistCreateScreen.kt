@@ -15,10 +15,10 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -46,9 +46,13 @@ import co.check2go.R
 import co.check2go.ui.theme.Check2GoTheme
 
 /**
- * Shared screen ID: CHECKLIST_CREATE (docs/flows.md Flow 7; docs/screen-inventory.md "Create /
- * Edit Checklist"). Both the CHECKLISTS_EMPTY "Create checklist" CTA and the shared quick-add FAB
- * open this stateless screen.
+ * Shared editor for both CHECKLIST_CREATE (docs/flows.md Flow 7) and CHECKLIST_EDIT (docs/flows.md
+ * Flow 8), matching docs/screen-inventory.md's single "Create / Edit Checklist" screen. The
+ * CHECKLISTS_EMPTY "Create checklist" CTA and the shared quick-add FAB open this screen with an
+ * empty [draft]; the CHECKLIST_DETAIL "Edit checklist" action opens it with [draft] prefilled from
+ * the saved checklist. [title] is the only thing that distinguishes the two call sites in this
+ * composable; all other caller-side differences (draft seeding, where "Save changes" writes to)
+ * live in `Check2GoApp`.
  *
  * Out of scope for this task: checklist photo, real file attachment, trip linkage, Use now, and
  * share/duplicate/delete (docs/screen-inventory.md "Create / Edit Checklist" lists these, but the
@@ -57,6 +61,13 @@ import co.check2go.ui.theme.Check2GoTheme
  * All draft mutation is delegated to the caller: this composable only reads [draft] and the
  * transient new-item form fields, and forwards user intents through callbacks. It performs no
  * draft transformation itself.
+ *
+ * Existing sections/items are editable in place (docs/flows.md Flow 8, step 3), not just
+ * addable/removable: [onSectionNameChange] renames an existing section, and
+ * [onItemNameChange]/[onItemSectionChange]/[onItemIncludeFileChange] edit an existing item's name,
+ * section assignment and include-file flag respectively. All four keep the edited section/item's id
+ * stable, which is what lets CHECKLIST_EDIT saves preserve completion (see
+ * [co.check2go.feature.checklists.withDraftApplied]).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,6 +77,7 @@ fun ChecklistCreateScreen(
     newSectionName: String,
     onNewSectionNameChange: (String) -> Unit,
     onAddSection: () -> Unit,
+    onSectionNameChange: (Long, String) -> Unit,
     onRemoveSection: (Long) -> Unit,
     newItemName: String,
     onNewItemNameChange: (String) -> Unit,
@@ -74,17 +86,25 @@ fun ChecklistCreateScreen(
     newItemIncludeFile: Boolean,
     onNewItemIncludeFileChange: (Boolean) -> Unit,
     onAddItem: () -> Unit,
+    onItemNameChange: (Long, String) -> Unit,
+    onItemSectionChange: (Long, Long?) -> Unit,
+    onItemIncludeFileChange: (Long, Boolean) -> Unit,
     onRemoveItem: (Long) -> Unit,
     onBack: () -> Unit,
     onSave: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    title: String = stringResource(R.string.checklist_create_title)
 ) {
+    val canSave = draft.name.isNotBlank() &&
+        draft.sections.all { it.name.isNotBlank() } &&
+        draft.items.all { it.name.isNotBlank() }
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
-                title = { Text(text = stringResource(R.string.checklist_create_title)) },
+                title = { Text(text = title) },
                 navigationIcon = {
                     TextButton(onClick = onBack) {
                         Text(text = stringResource(R.string.trip_back))
@@ -119,6 +139,7 @@ fun ChecklistCreateScreen(
                 newSectionName = newSectionName,
                 onNewSectionNameChange = onNewSectionNameChange,
                 onAddSection = onAddSection,
+                onSectionNameChange = onSectionNameChange,
                 onRemoveSection = onRemoveSection
             )
 
@@ -136,12 +157,15 @@ fun ChecklistCreateScreen(
             ItemsList(
                 items = draft.items,
                 sections = draft.sections,
+                onItemNameChange = onItemNameChange,
+                onItemSectionChange = onItemSectionChange,
+                onItemIncludeFileChange = onItemIncludeFileChange,
                 onRemoveItem = onRemoveItem
             )
 
             Button(
                 onClick = onSave,
-                enabled = draft.name.isNotBlank(),
+                enabled = canSave,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(text = stringResource(R.string.checklist_save))
@@ -156,6 +180,7 @@ private fun SectionsEditor(
     newSectionName: String,
     onNewSectionNameChange: (String) -> Unit,
     onAddSection: () -> Unit,
+    onSectionNameChange: (Long, String) -> Unit,
     onRemoveSection: (Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -174,10 +199,18 @@ private fun SectionsEditor(
                     .testTag("checklist_section_row_${section.id}")
                     .border(1.dp, MaterialTheme.colorScheme.onSurfaceVariant)
                     .padding(12.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = section.name, color = MaterialTheme.colorScheme.onBackground)
+                OutlinedTextField(
+                    value = section.name,
+                    onValueChange = { onSectionNameChange(section.id, it) },
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag("checklist_section_name_field_${section.id}"),
+                    label = { Text(text = stringResource(R.string.checklist_section_name_label)) },
+                    singleLine = true
+                )
                 TextButton(
                     onClick = { onRemoveSection(section.id) },
                     modifier = Modifier.semantics { contentDescription = removeLabel }
@@ -234,73 +267,25 @@ private fun NewItemEditor(
         OutlinedTextField(
             value = newItemName,
             onValueChange = onNewItemNameChange,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("new_item_name_field"),
             label = { Text(text = stringResource(R.string.checklist_item_name_label)) },
             singleLine = true
         )
 
-        val noSectionLabel = stringResource(R.string.checklist_no_section)
-        val selectedSectionLabel = sections.firstOrNull { it.id == newItemSectionId }?.name ?: noSectionLabel
-        var expanded by remember { mutableStateOf(false) }
+        SectionDropdownField(
+            sections = sections,
+            selectedSectionId = newItemSectionId,
+            onSectionSelected = onNewItemSectionIdChange,
+            testTag = "new_item_section_field"
+        )
 
-        ExposedDropdownMenuBox(
-            expanded = expanded,
-            onExpandedChange = { expanded = it },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            OutlinedTextField(
-                value = selectedSectionLabel,
-                onValueChange = {},
-                readOnly = true,
-                label = { Text(text = stringResource(R.string.checklist_item_section_label)) },
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("new_item_section_field")
-                    .menuAnchor(MenuAnchorType.PrimaryNotEditable)
-            )
-            DropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false }
-            ) {
-                DropdownMenuItem(
-                    text = { Text(text = noSectionLabel) },
-                    onClick = {
-                        onNewItemSectionIdChange(null)
-                        expanded = false
-                    }
-                )
-                sections.forEach { section ->
-                    DropdownMenuItem(
-                        text = { Text(text = section.name) },
-                        onClick = {
-                            onNewItemSectionIdChange(section.id)
-                            expanded = false
-                        }
-                    )
-                }
-            }
-        }
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .toggleable(
-                    value = newItemIncludeFile,
-                    onValueChange = onNewItemIncludeFileChange,
-                    role = Role.Switch
-                ),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = stringResource(R.string.checklist_include_file_label),
-                color = MaterialTheme.colorScheme.onBackground
-            )
-            // Switch itself is non-interactive; the enclosing Row's toggleable() drives it so the
-            // label and control share one accessible tap target and announcement.
-            Switch(checked = newItemIncludeFile, onCheckedChange = null)
-        }
+        IncludeFileToggleRow(
+            checked = newItemIncludeFile,
+            onCheckedChange = onNewItemIncludeFileChange,
+            modifier = Modifier.testTag("new_item_include_file_toggle")
+        )
 
         OutlinedButton(
             onClick = onAddItem,
@@ -312,16 +297,111 @@ private fun NewItemEditor(
     }
 }
 
+/**
+ * Section picker shared by [NewItemEditor]'s new-item form and [ItemsList]'s existing-item rows,
+ * so both editing paths present the same "No section" + known-sections choice.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SectionDropdownField(
+    sections: List<ChecklistSection>,
+    selectedSectionId: Long?,
+    onSectionSelected: (Long?) -> Unit,
+    testTag: String,
+    modifier: Modifier = Modifier
+) {
+    val noSectionLabel = stringResource(R.string.checklist_no_section)
+    val selectedSectionLabel = sections.firstOrNull { it.id == selectedSectionId }?.name ?: noSectionLabel
+    var expanded by remember { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = it },
+        modifier = modifier.fillMaxWidth()
+    ) {
+        OutlinedTextField(
+            value = selectedSectionLabel,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text(text = stringResource(R.string.checklist_item_section_label)) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(testTag)
+                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
+        )
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            // Explicit per-option testTags (rather than matching menu items by their displayed
+            // text) so a section whose name happens to match other on-screen text -- e.g. its own
+            // now-editable name field in SectionsEditor -- can never make a test's menu-item click
+            // ambiguous.
+            DropdownMenuItem(
+                text = { Text(text = noSectionLabel) },
+                onClick = {
+                    onSectionSelected(null)
+                    expanded = false
+                },
+                modifier = Modifier.testTag("${testTag}_option_none")
+            )
+            sections.forEach { section ->
+                DropdownMenuItem(
+                    text = { Text(text = section.name) },
+                    onClick = {
+                        onSectionSelected(section.id)
+                        expanded = false
+                    },
+                    modifier = Modifier.testTag("${testTag}_option_${section.id}")
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Include-file toggle shared by [NewItemEditor]'s new-item form and [ItemsList]'s existing-item
+ * rows.
+ */
+@Composable
+private fun IncludeFileToggleRow(
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .toggleable(
+                value = checked,
+                onValueChange = onCheckedChange,
+                role = Role.Switch
+            ),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = stringResource(R.string.checklist_include_file_label),
+            color = MaterialTheme.colorScheme.onBackground
+        )
+        // Switch itself is non-interactive; the enclosing Row's toggleable() drives it so the
+        // label and control share one accessible tap target and announcement.
+        Switch(checked = checked, onCheckedChange = null)
+    }
+}
+
 @Composable
 private fun ItemsList(
     items: List<ChecklistItemDraft>,
     sections: List<ChecklistSection>,
+    onItemNameChange: (Long, String) -> Unit,
+    onItemSectionChange: (Long, Long?) -> Unit,
+    onItemIncludeFileChange: (Long, Boolean) -> Unit,
     onRemoveItem: (Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
     if (items.isEmpty()) return
-
-    val noSectionLabel = stringResource(R.string.checklist_no_section)
 
     Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(
@@ -331,7 +411,6 @@ private fun ItemsList(
             fontWeight = FontWeight.SemiBold
         )
         items.forEach { item ->
-            val sectionLabel = sections.firstOrNull { it.id == item.sectionId }?.name ?: noSectionLabel
             val removeLabel = stringResource(R.string.checklist_remove_item_description, item.name)
             Column(
                 modifier = Modifier
@@ -339,17 +418,21 @@ private fun ItemsList(
                     .testTag("checklist_item_row_${item.id}")
                     .border(1.dp, MaterialTheme.colorScheme.onSurfaceVariant)
                     .padding(12.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = item.name,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        fontWeight = FontWeight.SemiBold
+                    OutlinedTextField(
+                        value = item.name,
+                        onValueChange = { onItemNameChange(item.id, it) },
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag("checklist_item_name_field_${item.id}"),
+                        label = { Text(text = stringResource(R.string.checklist_item_name_label)) },
+                        singleLine = true
                     )
                     TextButton(
                         onClick = { onRemoveItem(item.id) },
@@ -358,17 +441,17 @@ private fun ItemsList(
                         Text(text = stringResource(R.string.checklist_remove))
                     }
                 }
-                Text(
-                    text = sectionLabel,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.testTag("checklist_item_section_label_${item.id}")
+                SectionDropdownField(
+                    sections = sections,
+                    selectedSectionId = item.sectionId,
+                    onSectionSelected = { onItemSectionChange(item.id, it) },
+                    testTag = "checklist_item_section_field_${item.id}"
                 )
-                if (item.includeFile) {
-                    Text(
-                        text = stringResource(R.string.checklist_item_includes_file_badge),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+                IncludeFileToggleRow(
+                    checked = item.includeFile,
+                    onCheckedChange = { onItemIncludeFileChange(item.id, it) },
+                    modifier = Modifier.testTag("checklist_item_include_file_toggle_${item.id}")
+                )
                 HorizontalDivider(color = MaterialTheme.colorScheme.background)
             }
         }
@@ -392,6 +475,7 @@ private fun ChecklistCreatePreview() {
             newSectionName = "",
             onNewSectionNameChange = {},
             onAddSection = {},
+            onSectionNameChange = { _, _ -> },
             onRemoveSection = {},
             newItemName = "",
             onNewItemNameChange = {},
@@ -400,6 +484,9 @@ private fun ChecklistCreatePreview() {
             newItemIncludeFile = false,
             onNewItemIncludeFileChange = {},
             onAddItem = {},
+            onItemNameChange = { _, _ -> },
+            onItemSectionChange = { _, _ -> },
+            onItemIncludeFileChange = { _, _ -> },
             onRemoveItem = {},
             onBack = {},
             onSave = {}

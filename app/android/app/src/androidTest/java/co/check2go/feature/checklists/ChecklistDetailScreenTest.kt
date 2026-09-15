@@ -30,7 +30,7 @@ class ChecklistDetailScreenTest {
     fun showsTitleCompletionAndGroupedSectionsWithAnUnsectionedGroup() {
         composeRule.setContent {
             Check2GoTheme(darkTheme = false) {
-                ChecklistDetailScreen(checklist = checklist, onToggleItem = {}, onBack = {})
+                ChecklistDetailScreen(checklist = checklist, onToggleItem = {}, onEditChecklist = {}, onBack = {})
             }
         }
 
@@ -47,7 +47,7 @@ class ChecklistDetailScreenTest {
     fun itemChecklistBoxesReflectTheirCompletedState() {
         composeRule.setContent {
             Check2GoTheme(darkTheme = false) {
-                ChecklistDetailScreen(checklist = checklist, onToggleItem = {}, onBack = {})
+                ChecklistDetailScreen(checklist = checklist, onToggleItem = {}, onEditChecklist = {}, onBack = {})
             }
         }
 
@@ -61,7 +61,12 @@ class ChecklistDetailScreenTest {
 
         composeRule.setContent {
             Check2GoTheme(darkTheme = false) {
-                ChecklistDetailScreen(checklist = checklist, onToggleItem = { toggledId = it }, onBack = {})
+                ChecklistDetailScreen(
+                    checklist = checklist,
+                    onToggleItem = { toggledId = it },
+                    onEditChecklist = {},
+                    onBack = {}
+                )
             }
         }
 
@@ -71,10 +76,30 @@ class ChecklistDetailScreenTest {
     }
 
     @Test
+    fun tappingEditChecklistInvokesOnEditChecklist() {
+        var editInvoked = false
+
+        composeRule.setContent {
+            Check2GoTheme(darkTheme = false) {
+                ChecklistDetailScreen(
+                    checklist = checklist,
+                    onToggleItem = {},
+                    onEditChecklist = { editInvoked = true },
+                    onBack = {}
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("Edit checklist").performClick()
+
+        assertEquals(true, editInvoked)
+    }
+
+    @Test
     fun includeFileItemShowsAnUnavailableNoteAndNoFunctioningUploadControl() {
         composeRule.setContent {
             Check2GoTheme(darkTheme = false) {
-                ChecklistDetailScreen(checklist = checklist, onToggleItem = {}, onBack = {})
+                ChecklistDetailScreen(checklist = checklist, onToggleItem = {}, onEditChecklist = {}, onBack = {})
             }
         }
 
@@ -92,7 +117,7 @@ class ChecklistDetailScreenTest {
 
         composeRule.setContent {
             Check2GoTheme(darkTheme = false) {
-                ChecklistDetailScreen(checklist = emptyChecklist, onToggleItem = {}, onBack = {})
+                ChecklistDetailScreen(checklist = emptyChecklist, onToggleItem = {}, onEditChecklist = {}, onBack = {})
             }
         }
 
@@ -113,7 +138,7 @@ class ChecklistDetailScreenTest {
 
         composeRule.setContent {
             Check2GoTheme(darkTheme = false) {
-                ChecklistDetailScreen(checklist = fullChecklist, onToggleItem = {}, onBack = {})
+                ChecklistDetailScreen(checklist = fullChecklist, onToggleItem = {}, onEditChecklist = {}, onBack = {})
             }
         }
 
@@ -126,7 +151,12 @@ class ChecklistDetailScreenTest {
 
         composeRule.setContent {
             Check2GoTheme(darkTheme = false) {
-                ChecklistDetailScreen(checklist = checklist, onToggleItem = {}, onBack = { backInvoked = true })
+                ChecklistDetailScreen(
+                    checklist = checklist,
+                    onToggleItem = {},
+                    onEditChecklist = {},
+                    onBack = { backInvoked = true }
+                )
             }
         }
 
