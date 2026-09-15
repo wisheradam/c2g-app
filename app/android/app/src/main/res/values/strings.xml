@@ -69,4 +69,25 @@
          $5/month, 7-day-trial upsell that has not been approved as current product/pricing. -->
     <string name="checklists_team_promo_title">Team checklists</string>
     <string name="checklists_team_promo_body">Share checklist preparation with your travel companions.</string>
+    <string name="checklist_create_title">Create checklist</string>
+    <string name="checklist_name_label">Checklist name</string>
+    <string name="checklist_sections_title">Sections</string>
+    <string name="checklist_section_name_label">Section name</string>
+    <string name="checklist_add_section">Add section</string>
+    <string name="checklist_remove_section_description">Remove section %1$s</string>
+    <string name="checklist_add_item_title">New item</string>
+    <string name="checklist_item_name_label">Item name</string>
+    <string name="checklist_item_section_label">Section</string>
+    <string name="checklist_no_section">No section</string>
+    <string name="checklist_include_file_label">Include file</string>
+    <string name="checklist_item_includes_file_badge">Includes a file</string>
+    <string name="checklist_add_item">Add item</string>
+    <string name="checklist_items_title">Items</string>
+    <string name="checklist_remove">Remove</string>
+    <string name="checklist_remove_item_description">Remove item %1$s</string>
+    <string name="checklist_save">Save changes</string>
+    <!-- Neutral placeholder context: trip linking (docs/flows.md Flow 7, step 4) is out of scope
+         for this task, so every locally saved checklist currently shows the same personal context. -->
+    <string name="checklists_personal_context">Personal checklist</string>
+    <string name="checklists_completion_format">%1$d%% complete</string>
 </resources>
