@@ -1,10 +1,13 @@
 package co.check2go.app
 
 import android.view.KeyEvent
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotSelected
+import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -395,5 +398,71 @@ class Check2GoAppTest {
         composeRule.onNodeWithText("Create checklist").performClick()
 
         composeRule.onNodeWithText("Before leaving").assertDoesNotExist()
+    }
+
+    private fun createChecklistWithOneItem(checklistName: String, itemName: String) {
+        composeRule.onNodeWithText("Checklists").performClick()
+        composeRule.onNodeWithText("Create checklist").performClick()
+        composeRule.onNodeWithText("Checklist name").performTextInput(checklistName)
+        composeRule.onNodeWithText("Item name").performTextInput(itemName)
+        composeRule.onNodeWithText("Add item").performClick()
+        composeRule.onNodeWithText("Save changes").performClick()
+    }
+
+    @Test
+    fun tappingASavedChecklistOpensDetailWithItsStructuredItemsUncompleted() {
+        composeRule.setContent {
+            Check2GoTheme {
+                Check2GoApp(onTripCreateComplete = { _, _, _ -> })
+            }
+        }
+
+        createChecklistWithOneItem("Before leaving", "Passport")
+        composeRule.onNodeWithText("Before leaving").performClick()
+
+        // Detail title is the checklist's own name, and the just-saved item is present and unchecked.
+        composeRule.onAllNodesWithText("Before leaving").assertCountEquals(1)
+        composeRule.onNodeWithText("Passport").assertIsDisplayed()
+        composeRule.onNodeWithText("0% complete").assertIsDisplayed()
+    }
+
+    @Test
+    fun togglingAnItemInDetailUpdatesCompletionAndBackReturnsToThePopulatedList() {
+        composeRule.setContent {
+            Check2GoTheme {
+                Check2GoApp(onTripCreateComplete = { _, _, _ -> })
+            }
+        }
+
+        createChecklistWithOneItem("Before leaving", "Passport")
+        composeRule.onNodeWithText("Before leaving").performClick()
+
+        composeRule.onNodeWithTag("checklist_detail_item_row_1").performClick()
+        composeRule.onNodeWithText("100% complete").assertIsDisplayed()
+
+        composeRule.onNodeWithText("Back").performClick()
+
+        // Populated list reflects the same updated completion (single shared source of truth).
+        composeRule.onNodeWithText("Before leaving").assertIsDisplayed()
+        composeRule.onNodeWithText("100% complete").assertIsDisplayed()
+    }
+
+    @Test
+    fun toggleRetainedWhenReopeningDetailAfterGoingBack() {
+        composeRule.setContent {
+            Check2GoTheme {
+                Check2GoApp(onTripCreateComplete = { _, _, _ -> })
+            }
+        }
+
+        createChecklistWithOneItem("Before leaving", "Passport")
+        composeRule.onNodeWithText("Before leaving").performClick()
+        composeRule.onNodeWithTag("checklist_detail_item_row_1").performClick()
+        composeRule.onNodeWithText("Back").performClick()
+
+        composeRule.onNodeWithText("Before leaving").performClick()
+
+        composeRule.onNodeWithText("100% complete").assertIsDisplayed()
+        composeRule.onNodeWithTag("checklist_detail_item_row_1").assertIsOn()
     }
 }

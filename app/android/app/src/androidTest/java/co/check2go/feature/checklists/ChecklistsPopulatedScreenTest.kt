@@ -32,6 +32,7 @@ class ChecklistsPopulatedScreenTest {
                     checklists = sampleChecklists,
                     onCreateChecklist = {},
                     onQuickAdd = {},
+                    onChecklistSelected = {},
                     onDestinationSelected = {}
                 )
             }
@@ -46,6 +47,34 @@ class ChecklistsPopulatedScreenTest {
     }
 
     @Test
+    fun cardShowsItsOwnCalculatedCompletionPercentage() {
+        val checklists = listOf(
+            CompletedChecklist(
+                id = 1L,
+                name = "Packing",
+                items = listOf(
+                    SavedChecklistItem(id = 1L, name = "A", sectionId = null, includeFile = false, completed = true),
+                    SavedChecklistItem(id = 2L, name = "B", sectionId = null, includeFile = false, completed = false)
+                )
+            )
+        )
+
+        composeRule.setContent {
+            Check2GoTheme(darkTheme = false) {
+                ChecklistsPopulatedScreen(
+                    checklists = checklists,
+                    onCreateChecklist = {},
+                    onQuickAdd = {},
+                    onChecklistSelected = {},
+                    onDestinationSelected = {}
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("50% complete").assertIsDisplayed()
+    }
+
+    @Test
     fun createChecklistAndQuickAddReachTheirCallbacks() {
         var createCount = 0
         var quickAddCount = 0
@@ -56,6 +85,7 @@ class ChecklistsPopulatedScreenTest {
                     checklists = sampleChecklists,
                     onCreateChecklist = { createCount++ },
                     onQuickAdd = { quickAddCount++ },
+                    onChecklistSelected = {},
                     onDestinationSelected = {}
                 )
             }
@@ -66,5 +96,26 @@ class ChecklistsPopulatedScreenTest {
 
         assertEquals(1, createCount)
         assertEquals(1, quickAddCount)
+    }
+
+    @Test
+    fun tappingARowInvokesOnChecklistSelectedWithThatChecklistsId() {
+        var selectedId: Long? = null
+
+        composeRule.setContent {
+            Check2GoTheme {
+                ChecklistsPopulatedScreen(
+                    checklists = sampleChecklists,
+                    onCreateChecklist = {},
+                    onQuickAdd = {},
+                    onChecklistSelected = { selectedId = it },
+                    onDestinationSelected = {}
+                )
+            }
+        }
+
+        composeRule.onNodeWithTag("checklist_card_2").performClick()
+
+        assertEquals(2L, selectedId)
     }
 }

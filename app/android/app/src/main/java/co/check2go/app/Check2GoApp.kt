@@ -8,6 +8,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import co.check2go.core.design.AppDestination
 import co.check2go.feature.checklists.ChecklistCreateScreen
+import co.check2go.feature.checklists.ChecklistDetailScreen
 import co.check2go.feature.checklists.ChecklistDraft
 import co.check2go.feature.checklists.ChecklistDraftSaver
 import co.check2go.feature.checklists.ChecklistItemDraft
@@ -16,7 +17,9 @@ import co.check2go.feature.checklists.ChecklistsEmptyScreen
 import co.check2go.feature.checklists.ChecklistsPopulatedScreen
 import co.check2go.feature.checklists.CompletedChecklist
 import co.check2go.feature.checklists.CompletedChecklistListSaver
+import co.check2go.feature.checklists.toSavedChecklist
 import co.check2go.feature.checklists.withItemAdded
+import co.check2go.feature.checklists.withItemCompletionToggled
 import co.check2go.feature.checklists.withItemRemoved
 import co.check2go.feature.checklists.withSectionAdded
 import co.check2go.feature.checklists.withSectionRemoved
@@ -33,12 +36,14 @@ import co.check2go.feature.trip.TripDestinationDraft
 import co.check2go.feature.trip.TripFilter
 import co.check2go.feature.trip.TripTravelersDraft
 
-private enum class AppScreen { Home, Checklists, ChecklistCreate, TripDestination, TripDates, TripTravelers }
+private enum class AppScreen {
+    Home, Checklists, ChecklistCreate, ChecklistDetail, TripDestination, TripDates, TripTravelers
+}
 
 /**
  * Minimal app-level navigation for HOME_EMPTY/HOME_TRIPS <-> CHECKLISTS_EMPTY/CHECKLISTS_POPULATED
- * <-> CHECKLIST_CREATE and HOME_EMPTY/HOME_TRIPS -> TRIP_CREATE_DESTINATION -> TRIP_CREATE_DATES ->
- * TRIP_CREATE_TRAVELERS.
+ * <-> CHECKLIST_CREATE, CHECKLISTS_POPULATED -> CHECKLIST_DETAIL, and HOME_EMPTY/HOME_TRIPS ->
+ * TRIP_CREATE_DESTINATION -> TRIP_CREATE_DATES -> TRIP_CREATE_TRAVELERS.
  *
  * [onChecklistCreated] mirrors [onTripCreateComplete]: an app-level hook fired once CHECKLIST_CREATE
  * "Save changes" (Flow 7, step 7) succeeds, receiving the full structured draft.
@@ -86,6 +91,7 @@ fun Check2GoApp(
         mutableStateOf(emptyList<CompletedChecklist>())
     }
     var nextChecklistId by rememberSaveable { mutableStateOf(1L) }
+    var selectedChecklistId by rememberSaveable { mutableStateOf<Long?>(null) }
 
     fun resetTripDraft() {
         destinationCountry = ""
@@ -151,6 +157,10 @@ fun Check2GoApp(
                     checklists = checklists,
                     onCreateChecklist = openChecklistCreate,
                     onQuickAdd = openChecklistCreate,
+                    onChecklistSelected = { checklistId ->
+                        selectedChecklistId = checklistId
+                        screen = AppScreen.ChecklistDetail
+                    },
                     onDestinationSelected = onAppDestinationSelected
                 )
             }
@@ -206,7 +216,7 @@ fun Check2GoApp(
                 onSave = {
                     val savedDraft = checklistDraft
                     onChecklistCreated(savedDraft)
-                    checklists = checklists + CompletedChecklist(id = nextChecklistId, name = savedDraft.name)
+                    checklists = checklists + savedDraft.toSavedChecklist(id = nextChecklistId)
                     nextChecklistId += 1
                     checklistDraft = ChecklistDraft()
                     newSectionName = ""
@@ -215,6 +225,28 @@ fun Check2GoApp(
                     newItemIncludeFile = false
                     screen = AppScreen.Checklists
                 }
+            )
+        }
+
+        AppScreen.ChecklistDetail -> {
+            val navigateToChecklists = { screen = AppScreen.Checklists }
+            BackHandler(onBack = navigateToChecklists)
+            // CHECKLIST_DETAIL is only reached via a CHECKLISTS_POPULATED row tap, which always
+            // sets selectedChecklistId to a checklist that currently exists (this app has no
+            // delete/duplicate, out of scope), so this lookup always resolves.
+            val selectedChecklist = checklists.first { it.id == selectedChecklistId }
+            ChecklistDetailScreen(
+                checklist = selectedChecklist,
+                onToggleItem = { itemId ->
+                    checklists = checklists.map { checklist ->
+                        if (checklist.id == selectedChecklist.id) {
+                            checklist.withItemCompletionToggled(itemId)
+                        } else {
+                            checklist
+                        }
+                    }
+                },
+                onBack = navigateToChecklists
             )
         }
 

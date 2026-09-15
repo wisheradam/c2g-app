@@ -1,6 +1,7 @@
 package co.check2go.feature.checklists
 
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -37,11 +38,11 @@ import co.check2go.ui.theme.Check2GoTheme
  * Shared screen ID: CHECKLISTS_POPULATED (docs/flows.md Flow 5, step 4;
  * docs/screen-inventory.md "Checklists — main tab > Populated list").
  *
- * Stateless: shows only the fields verified for this task, each checklist's name, a neutral
- * personal context (trip linkage is out of scope, see [CompletedChecklist]) and a fixed 0%
- * completion, since item completion toggling is out of scope. Tapping a row (detail) is
- * intentionally not wired up yet. Assumes [checklists] is non-empty; the caller shows
- * [ChecklistsEmptyScreen] instead while there are none.
+ * Stateless: shows each checklist's name, a neutral personal context (trip linkage is out of
+ * scope, see [CompletedChecklist]) and its calculated completion percentage
+ * ([completionPercent]). Tapping a row invokes [onChecklistSelected] to open CHECKLIST_DETAIL.
+ * Assumes [checklists] is non-empty; the caller shows [ChecklistsEmptyScreen] instead while there
+ * are none.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,6 +50,7 @@ fun ChecklistsPopulatedScreen(
     checklists: List<CompletedChecklist>,
     onCreateChecklist: () -> Unit,
     onQuickAdd: () -> Unit,
+    onChecklistSelected: (Long) -> Unit,
     onDestinationSelected: (AppDestination) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -104,19 +106,20 @@ fun ChecklistsPopulatedScreen(
                 Text(text = stringResource(R.string.checklists_create_checklist))
             }
             checklists.forEach { checklist ->
-                ChecklistCard(checklist = checklist)
+                ChecklistCard(checklist = checklist, onClick = { onChecklistSelected(checklist.id) })
             }
         }
     }
 }
 
 @Composable
-private fun ChecklistCard(checklist: CompletedChecklist, modifier: Modifier = Modifier) {
+private fun ChecklistCard(checklist: CompletedChecklist, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxWidth()
             .testTag("checklist_card_${checklist.id}")
             .border(1.dp, MaterialTheme.colorScheme.onSurfaceVariant)
+            .clickable(onClickLabel = checklist.name, onClick = onClick)
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
@@ -132,7 +135,7 @@ private fun ChecklistCard(checklist: CompletedChecklist, modifier: Modifier = Mo
             style = MaterialTheme.typography.bodySmall
         )
         Text(
-            text = stringResource(R.string.checklists_completion_format, 0),
+            text = stringResource(R.string.checklists_completion_format, checklist.completionPercent()),
             color = MaterialTheme.colorScheme.primary,
             style = MaterialTheme.typography.labelMedium
         )
@@ -145,11 +148,19 @@ private fun ChecklistsPopulatedPreview() {
     Check2GoTheme(darkTheme = false) {
         ChecklistsPopulatedScreen(
             checklists = listOf(
-                CompletedChecklist(id = 1L, name = "Before leaving"),
+                CompletedChecklist(
+                    id = 1L,
+                    name = "Before leaving",
+                    items = listOf(
+                        SavedChecklistItem(id = 1L, name = "Passport", sectionId = null, includeFile = true, completed = true),
+                        SavedChecklistItem(id = 2L, name = "Charger", sectionId = null, includeFile = false, completed = false)
+                    )
+                ),
                 CompletedChecklist(id = 2L, name = "Documents")
             ),
             onCreateChecklist = {},
             onQuickAdd = {},
+            onChecklistSelected = {},
             onDestinationSelected = {}
         )
     }

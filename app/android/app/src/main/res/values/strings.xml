@@ -90,4 +90,7 @@
          for this task, so every locally saved checklist currently shows the same personal context. -->
     <string name="checklists_personal_context">Personal checklist</string>
     <string name="checklists_completion_format">%1$d%% complete</string>
+    <!-- Temporary: real file attachment (picker/storage/backend) is not implemented yet. -->
+    <string name="checklist_detail_upload_file_unavailable">Upload file: not available yet.</string>
+    <string name="checklist_detail_no_items">No items in this checklist yet.</string>
 </resources>
