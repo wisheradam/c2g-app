@@ -4,14 +4,18 @@ import android.view.KeyEvent
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotSelected
+import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import androidx.test.platform.app.InstrumentationRegistry
 import co.check2go.feature.checklists.ChecklistDraft
@@ -369,9 +373,9 @@ class Check2GoAppTest {
         composeRule.onNodeWithText("Checklists").performClick()
         composeRule.onNodeWithText("Create checklist").performClick()
         composeRule.onNodeWithText("Checklist name").performTextInput("Before leaving")
-        composeRule.onNodeWithText("Item name").performTextInput("Passport")
+        composeRule.onNodeWithTag("new_item_name_field").performTextInput("Passport")
         composeRule.onNodeWithText("Add item").performClick()
-        composeRule.onNodeWithText("Save changes").performClick()
+        composeRule.onNodeWithText("Save changes").performScrollTo().performClick()
 
         assertEquals("Before leaving", savedDraft?.name)
         assertEquals(1, savedDraft?.items?.size)
@@ -393,7 +397,7 @@ class Check2GoAppTest {
         composeRule.onNodeWithText("Checklists").performClick()
         composeRule.onNodeWithText("Create checklist").performClick()
         composeRule.onNodeWithText("Checklist name").performTextInput("Before leaving")
-        composeRule.onNodeWithText("Save changes").performClick()
+        composeRule.onNodeWithText("Save changes").performScrollTo().performClick()
 
         composeRule.onNodeWithText("Create checklist").performClick()
 
@@ -404,9 +408,9 @@ class Check2GoAppTest {
         composeRule.onNodeWithText("Checklists").performClick()
         composeRule.onNodeWithText("Create checklist").performClick()
         composeRule.onNodeWithText("Checklist name").performTextInput(checklistName)
-        composeRule.onNodeWithText("Item name").performTextInput(itemName)
+        composeRule.onNodeWithTag("new_item_name_field").performTextInput(itemName)
         composeRule.onNodeWithText("Add item").performClick()
-        composeRule.onNodeWithText("Save changes").performClick()
+        composeRule.onNodeWithText("Save changes").performScrollTo().performClick()
     }
 
     @Test
@@ -464,5 +468,215 @@ class Check2GoAppTest {
 
         composeRule.onNodeWithText("100% complete").assertIsDisplayed()
         composeRule.onNodeWithTag("checklist_detail_item_row_1").assertIsOn()
+    }
+
+    @Test
+    fun editChecklistOpensEditorPrefilledWithSavedNameAndItems() {
+        composeRule.setContent {
+            Check2GoTheme {
+                Check2GoApp(onTripCreateComplete = { _, _, _ -> })
+            }
+        }
+
+        createChecklistWithOneItem("Before leaving", "Passport")
+        composeRule.onNodeWithText("Before leaving").performClick()
+
+        composeRule.onNodeWithText("Edit checklist").performClick()
+
+        composeRule.onNodeWithText("Before leaving").assertIsDisplayed()
+        composeRule.onNodeWithTag("checklist_item_row_1").assertIsDisplayed()
+        composeRule.onNodeWithText("Passport").assertIsDisplayed()
+    }
+
+    @Test
+    fun editingAChecklistPreservesExistingCompletionAndStartsAnAddedItemIncomplete() {
+        composeRule.setContent {
+            Check2GoTheme {
+                Check2GoApp(onTripCreateComplete = { _, _, _ -> })
+            }
+        }
+
+        createChecklistWithOneItem("Before leaving", "Passport")
+        composeRule.onNodeWithText("Before leaving").performClick()
+        composeRule.onNodeWithTag("checklist_detail_item_row_1").performClick()
+        composeRule.onNodeWithText("100% complete").assertIsDisplayed()
+
+        composeRule.onNodeWithText("Edit checklist").performClick()
+        composeRule.onNodeWithTag("new_item_name_field").performTextInput("Charger")
+        composeRule.onNodeWithText("Add item").performClick()
+        composeRule.onNodeWithText("Save changes").performScrollTo().performClick()
+
+        // Back on CHECKLIST_DETAIL: the pre-existing item kept its completion, the added item
+        // (a new id never seen on this checklist) starts uncompleted.
+        composeRule.onNodeWithText("50% complete").assertIsDisplayed()
+        composeRule.onNodeWithTag("checklist_detail_item_row_1").assertIsOn()
+        composeRule.onNodeWithTag("checklist_detail_item_row_2").assertIsOff()
+    }
+
+    @Test
+    fun editingAChecklistCanRenameItAndRemoveAnItem() {
+        composeRule.setContent {
+            Check2GoTheme {
+                Check2GoApp(onTripCreateComplete = { _, _, _ -> })
+            }
+        }
+
+        createChecklistWithOneItem("Before leaving", "Passport")
+        composeRule.onNodeWithText("Before leaving").performClick()
+        composeRule.onNodeWithText("Edit checklist").performClick()
+
+        composeRule.onNodeWithText("Before leaving").performTextClearance()
+        composeRule.onNodeWithText("Checklist name").performTextInput("Packing list")
+        composeRule.onNodeWithContentDescription("Remove item Passport").performClick()
+        composeRule.onNodeWithText("Save changes").performScrollTo().performClick()
+
+        // Detail reflects both the rename and the removal.
+        composeRule.onNodeWithText("Packing list").assertIsDisplayed()
+        composeRule.onNodeWithText("Passport").assertDoesNotExist()
+        composeRule.onNodeWithText("No items in this checklist yet.").assertIsDisplayed()
+
+        composeRule.onNodeWithText("Back").performClick()
+
+        // Populated list is the same shared source of truth, so it reflects the rename too.
+        composeRule.onNodeWithText("Packing list").assertIsDisplayed()
+        composeRule.onNodeWithText("Before leaving").assertDoesNotExist()
+    }
+
+    @Test
+    fun backFromChecklistEditDiscardsUnsavedNameAndItemChanges() {
+        composeRule.setContent {
+            Check2GoTheme {
+                Check2GoApp(onTripCreateComplete = { _, _, _ -> })
+            }
+        }
+
+        createChecklistWithOneItem("Before leaving", "Passport")
+        composeRule.onNodeWithText("Before leaving").performClick()
+        composeRule.onNodeWithText("Edit checklist").performClick()
+
+        composeRule.onNodeWithText("Checklist name").performTextInput(" (edited)")
+        composeRule.onNodeWithContentDescription("Remove item Passport").performClick()
+
+        composeRule.onNodeWithText("Back").performClick()
+
+        // Back discarded both the unsaved rename and the unsaved item removal.
+        composeRule.onAllNodesWithText("Before leaving").assertCountEquals(1)
+        composeRule.onNodeWithText("Passport").assertIsDisplayed()
+
+        // Reopening Edit re-seeds from the saved checklist, not the discarded in-memory edit.
+        composeRule.onNodeWithText("Edit checklist").performClick()
+        composeRule.onNodeWithText("Before leaving").assertIsDisplayed()
+        composeRule.onNodeWithTag("checklist_item_row_1").assertIsDisplayed()
+    }
+
+    @Test
+    fun editingAChecklistCanRenameAnExistingSection() {
+        composeRule.setContent {
+            Check2GoTheme {
+                Check2GoApp(onTripCreateComplete = { _, _, _ -> })
+            }
+        }
+
+        composeRule.onNodeWithText("Checklists").performClick()
+        composeRule.onNodeWithText("Create checklist").performClick()
+        composeRule.onNodeWithText("Checklist name").performTextInput("Before leaving")
+        composeRule.onNodeWithText("Section name").performTextInput("Documents")
+        composeRule.onNodeWithText("Add section").performClick()
+        composeRule.onNodeWithTag("new_item_name_field").performTextInput("Passport")
+        composeRule.onNodeWithTag("new_item_section_field").performClick()
+        composeRule.onNodeWithTag("new_item_section_field_option_1").performClick()
+        composeRule.onNodeWithText("Add item").performClick()
+        composeRule.onNodeWithText("Save changes").performScrollTo().performClick()
+
+        composeRule.onNodeWithText("Before leaving").performClick()
+        composeRule.onNodeWithText("Edit checklist").performClick()
+
+        // Rename the existing section in place -- not remove-and-re-add, so the item's reference
+        // to its id (set above) survives untouched.
+        composeRule.onNodeWithTag("checklist_section_name_field_1").performTextClearance()
+        composeRule.onNodeWithTag("checklist_section_name_field_1").performTextInput("Paperwork")
+        composeRule.onNodeWithText("Save changes").performScrollTo().performClick()
+
+        // Detail reflects the rename, and the item is still grouped under the (renamed) section.
+        composeRule.onNodeWithText("Paperwork").assertIsDisplayed()
+        composeRule.onNodeWithText("Documents").assertDoesNotExist()
+        composeRule.onNodeWithText("Passport").assertIsDisplayed()
+    }
+
+    @Test
+    fun editingAChecklistCanReassignAnExistingItemsSectionAndToggleIncludeFile() {
+        composeRule.setContent {
+            Check2GoTheme {
+                Check2GoApp(onTripCreateComplete = { _, _, _ -> })
+            }
+        }
+
+        composeRule.onNodeWithText("Checklists").performClick()
+        composeRule.onNodeWithText("Create checklist").performClick()
+        composeRule.onNodeWithText("Checklist name").performTextInput("Before leaving")
+        composeRule.onNodeWithText("Section name").performTextInput("Documents")
+        composeRule.onNodeWithText("Add section").performClick()
+        composeRule.onNodeWithTag("new_item_name_field").performTextInput("Passport")
+        composeRule.onNodeWithText("Add item").performClick()
+        composeRule.onNodeWithText("Save changes").performScrollTo().performClick()
+
+        composeRule.onNodeWithText("Before leaving").performClick()
+        composeRule.onNodeWithText("Edit checklist").performClick()
+
+        // The item was added above with no section and include-file off; edit both fields on the
+        // existing item in place (not via remove-and-re-add).
+        composeRule.onNodeWithTag("checklist_item_section_field_1").performClick()
+        composeRule.onNodeWithTag("checklist_item_section_field_1_option_1").performClick()
+        composeRule.onNodeWithTag("checklist_item_include_file_toggle_1")
+            .performScrollTo()
+            .performClick()
+            .assertIsOn()
+        composeRule.onNodeWithText("Save changes").performScrollTo().performClick()
+
+        // Detail shows the item grouped under Documents (its now-saved section) and marked with
+        // the include-file note.
+        composeRule.onNodeWithText("Documents").assertIsDisplayed()
+        composeRule.onNodeWithTag("checklist_detail_upload_file_note_1").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun backFromChecklistEditDiscardsSectionRenameItemSectionReassignmentAndIncludeFileChange() {
+        composeRule.setContent {
+            Check2GoTheme {
+                Check2GoApp(onTripCreateComplete = { _, _, _ -> })
+            }
+        }
+
+        composeRule.onNodeWithText("Checklists").performClick()
+        composeRule.onNodeWithText("Create checklist").performClick()
+        composeRule.onNodeWithText("Checklist name").performTextInput("Before leaving")
+        composeRule.onNodeWithText("Section name").performTextInput("Documents")
+        composeRule.onNodeWithText("Add section").performClick()
+        composeRule.onNodeWithTag("new_item_name_field").performTextInput("Passport")
+        composeRule.onNodeWithText("Add item").performClick()
+        composeRule.onNodeWithText("Save changes").performScrollTo().performClick()
+
+        composeRule.onNodeWithText("Before leaving").performClick()
+        composeRule.onNodeWithText("Edit checklist").performClick()
+
+        composeRule.onNodeWithTag("checklist_section_name_field_1").performTextInput(" (edited)")
+        composeRule.onNodeWithTag("checklist_item_section_field_1").performClick()
+        composeRule.onNodeWithTag("checklist_item_section_field_1_option_1").performClick()
+        composeRule.onNodeWithTag("checklist_item_include_file_toggle_1")
+            .performScrollTo()
+            .performClick()
+            .assertIsOn()
+
+        composeRule.onNodeWithText("Back").performClick()
+
+        // The item's section/include-file were never saved, so detail shows no file note.
+        composeRule.onNodeWithTag("checklist_detail_upload_file_note_1").assertDoesNotExist()
+
+        // Reopening Edit re-seeds from the saved checklist, not the discarded in-memory edit: the
+        // section keeps its original name, and the item is still unassigned with include-file off.
+        composeRule.onNodeWithText("Edit checklist").performClick()
+        composeRule.onNodeWithTag("checklist_section_name_field_1").assertTextContains("Documents", substring = true)
+        composeRule.onNodeWithTag("checklist_item_section_field_1").assertTextContains("No section", substring = true)
+        composeRule.onNodeWithTag("checklist_item_include_file_toggle_1").assertIsOff()
     }
 }

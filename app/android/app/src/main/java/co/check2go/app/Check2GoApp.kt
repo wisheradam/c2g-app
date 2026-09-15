@@ -6,6 +6,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.stringResource
+import co.check2go.R
 import co.check2go.core.design.AppDestination
 import co.check2go.feature.checklists.ChecklistCreateScreen
 import co.check2go.feature.checklists.ChecklistDetailScreen
@@ -17,12 +19,18 @@ import co.check2go.feature.checklists.ChecklistsEmptyScreen
 import co.check2go.feature.checklists.ChecklistsPopulatedScreen
 import co.check2go.feature.checklists.CompletedChecklist
 import co.check2go.feature.checklists.CompletedChecklistListSaver
+import co.check2go.feature.checklists.toDraft
 import co.check2go.feature.checklists.toSavedChecklist
+import co.check2go.feature.checklists.withDraftApplied
 import co.check2go.feature.checklists.withItemAdded
 import co.check2go.feature.checklists.withItemCompletionToggled
+import co.check2go.feature.checklists.withItemIncludeFileChanged
+import co.check2go.feature.checklists.withItemNameChanged
 import co.check2go.feature.checklists.withItemRemoved
+import co.check2go.feature.checklists.withItemSectionChanged
 import co.check2go.feature.checklists.withSectionAdded
 import co.check2go.feature.checklists.withSectionRemoved
+import co.check2go.feature.checklists.withSectionRenamed
 import co.check2go.feature.home.HomeEmptyScreen
 import co.check2go.feature.home.MyTripsScreen
 import co.check2go.feature.trip.CompletedTrip
@@ -37,13 +45,13 @@ import co.check2go.feature.trip.TripFilter
 import co.check2go.feature.trip.TripTravelersDraft
 
 private enum class AppScreen {
-    Home, Checklists, ChecklistCreate, ChecklistDetail, TripDestination, TripDates, TripTravelers
+    Home, Checklists, ChecklistCreate, ChecklistDetail, ChecklistEdit, TripDestination, TripDates, TripTravelers
 }
 
 /**
  * Minimal app-level navigation for HOME_EMPTY/HOME_TRIPS <-> CHECKLISTS_EMPTY/CHECKLISTS_POPULATED
- * <-> CHECKLIST_CREATE, CHECKLISTS_POPULATED -> CHECKLIST_DETAIL, and HOME_EMPTY/HOME_TRIPS ->
- * TRIP_CREATE_DESTINATION -> TRIP_CREATE_DATES -> TRIP_CREATE_TRAVELERS.
+ * <-> CHECKLIST_CREATE, CHECKLISTS_POPULATED -> CHECKLIST_DETAIL <-> CHECKLIST_EDIT, and
+ * HOME_EMPTY/HOME_TRIPS -> TRIP_CREATE_DESTINATION -> TRIP_CREATE_DATES -> TRIP_CREATE_TRAVELERS.
  *
  * [onChecklistCreated] mirrors [onTripCreateComplete]: an app-level hook fired once CHECKLIST_CREATE
  * "Save changes" (Flow 7, step 7) succeeds, receiving the full structured draft.
@@ -92,6 +100,21 @@ fun Check2GoApp(
     }
     var nextChecklistId by rememberSaveable { mutableStateOf(1L) }
     var selectedChecklistId by rememberSaveable { mutableStateOf<Long?>(null) }
+
+    // CHECKLIST_EDIT draft: a separate hoisted draft from checklistDraft above so an in-progress
+    // CHECKLIST_CREATE draft is never clobbered by opening Edit on a saved checklist. Unlike
+    // checklistDraft, this one is always re-seeded from the saved checklist when Edit opens (see
+    // AppScreen.ChecklistDetail's onEditChecklist below), which is what makes "Back discards
+    // unsaved edits" (Flow 8) true: nothing typed here reaches `checklists` unless Save is pressed,
+    // and reopening Edit always starts fresh from the saved state rather than resuming a discarded
+    // in-memory edit.
+    var checklistEditDraft by rememberSaveable(stateSaver = ChecklistDraftSaver) {
+        mutableStateOf(ChecklistDraft())
+    }
+    var editNewSectionName by rememberSaveable { mutableStateOf("") }
+    var editNewItemName by rememberSaveable { mutableStateOf("") }
+    var editNewItemSectionId by rememberSaveable { mutableStateOf<Long?>(null) }
+    var editNewItemIncludeFile by rememberSaveable { mutableStateOf(false) }
 
     fun resetTripDraft() {
         destinationCountry = ""
@@ -185,6 +208,9 @@ fun Check2GoApp(
                         newSectionName = ""
                     }
                 },
+                onSectionNameChange = { sectionId, name ->
+                    checklistDraft = checklistDraft.withSectionRenamed(sectionId, name)
+                },
                 onRemoveSection = { sectionId ->
                     checklistDraft = checklistDraft.withSectionRemoved(sectionId)
                     if (newItemSectionId == sectionId) newItemSectionId = null
@@ -210,6 +236,13 @@ fun Check2GoApp(
                         newItemSectionId = null
                         newItemIncludeFile = false
                     }
+                },
+                onItemNameChange = { itemId, name -> checklistDraft = checklistDraft.withItemNameChanged(itemId, name) },
+                onItemSectionChange = { itemId, sectionId ->
+                    checklistDraft = checklistDraft.withItemSectionChanged(itemId, sectionId)
+                },
+                onItemIncludeFileChange = { itemId, includeFile ->
+                    checklistDraft = checklistDraft.withItemIncludeFileChanged(itemId, includeFile)
                 },
                 onRemoveItem = { itemId -> checklistDraft = checklistDraft.withItemRemoved(itemId) },
                 onBack = navigateToChecklists,
@@ -246,7 +279,92 @@ fun Check2GoApp(
                         }
                     }
                 },
+                onEditChecklist = {
+                    checklistEditDraft = selectedChecklist.toDraft()
+                    editNewSectionName = ""
+                    editNewItemName = ""
+                    editNewItemSectionId = null
+                    editNewItemIncludeFile = false
+                    screen = AppScreen.ChecklistEdit
+                },
                 onBack = navigateToChecklists
+            )
+        }
+
+        AppScreen.ChecklistEdit -> {
+            val navigateToDetail = { screen = AppScreen.ChecklistDetail }
+            // Back discards unsaved edits (Flow 8): checklistEditDraft is only written back into
+            // `checklists` in onSave below, and the next "Edit checklist" tap always re-seeds it
+            // from the saved checklist (see onEditChecklist above), so nothing typed after this
+            // Back press is ever persisted.
+            BackHandler(onBack = navigateToDetail)
+            // CHECKLIST_EDIT is only reached via a CHECKLIST_DETAIL "Edit checklist" tap, which
+            // always leaves selectedChecklistId set to a checklist that currently exists (this app
+            // has no delete, out of scope), so this lookup always resolves -- same assumption as
+            // AppScreen.ChecklistDetail above.
+            val editedChecklistId = requireNotNull(selectedChecklistId)
+            ChecklistCreateScreen(
+                draft = checklistEditDraft,
+                title = stringResource(R.string.checklist_edit_title),
+                onNameChange = { checklistEditDraft = checklistEditDraft.copy(name = it) },
+                newSectionName = editNewSectionName,
+                onNewSectionNameChange = { editNewSectionName = it },
+                onAddSection = {
+                    if (editNewSectionName.isNotBlank()) {
+                        checklistEditDraft = checklistEditDraft.withSectionAdded(
+                            ChecklistSection(id = nextSectionId, name = editNewSectionName.trim())
+                        )
+                        nextSectionId += 1
+                        editNewSectionName = ""
+                    }
+                },
+                onSectionNameChange = { sectionId, name ->
+                    checklistEditDraft = checklistEditDraft.withSectionRenamed(sectionId, name)
+                },
+                onRemoveSection = { sectionId ->
+                    checklistEditDraft = checklistEditDraft.withSectionRemoved(sectionId)
+                    if (editNewItemSectionId == sectionId) editNewItemSectionId = null
+                },
+                newItemName = editNewItemName,
+                onNewItemNameChange = { editNewItemName = it },
+                newItemSectionId = editNewItemSectionId,
+                onNewItemSectionIdChange = { editNewItemSectionId = it },
+                newItemIncludeFile = editNewItemIncludeFile,
+                onNewItemIncludeFileChange = { editNewItemIncludeFile = it },
+                onAddItem = {
+                    if (editNewItemName.isNotBlank()) {
+                        checklistEditDraft = checklistEditDraft.withItemAdded(
+                            ChecklistItemDraft(
+                                id = nextItemId,
+                                name = editNewItemName.trim(),
+                                sectionId = editNewItemSectionId,
+                                includeFile = editNewItemIncludeFile
+                            )
+                        )
+                        nextItemId += 1
+                        editNewItemName = ""
+                        editNewItemSectionId = null
+                        editNewItemIncludeFile = false
+                    }
+                },
+                onItemNameChange = { itemId, name ->
+                    checklistEditDraft = checklistEditDraft.withItemNameChanged(itemId, name)
+                },
+                onItemSectionChange = { itemId, sectionId ->
+                    checklistEditDraft = checklistEditDraft.withItemSectionChanged(itemId, sectionId)
+                },
+                onItemIncludeFileChange = { itemId, includeFile ->
+                    checklistEditDraft = checklistEditDraft.withItemIncludeFileChanged(itemId, includeFile)
+                },
+                onRemoveItem = { itemId -> checklistEditDraft = checklistEditDraft.withItemRemoved(itemId) },
+                onBack = navigateToDetail,
+                onSave = {
+                    val savedDraft = checklistEditDraft
+                    checklists = checklists.map { checklist ->
+                        if (checklist.id == editedChecklistId) checklist.withDraftApplied(savedDraft) else checklist
+                    }
+                    screen = AppScreen.ChecklistDetail
+                }
             )
         }
 

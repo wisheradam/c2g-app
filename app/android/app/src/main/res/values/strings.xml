@@ -80,7 +80,6 @@
     <string name="checklist_item_section_label">Section</string>
     <string name="checklist_no_section">No section</string>
     <string name="checklist_include_file_label">Include file</string>
-    <string name="checklist_item_includes_file_badge">Includes a file</string>
     <string name="checklist_add_item">Add item</string>
     <string name="checklist_items_title">Items</string>
     <string name="checklist_remove">Remove</string>
@@ -93,4 +92,6 @@
     <!-- Temporary: real file attachment (picker/storage/backend) is not implemented yet. -->
     <string name="checklist_detail_upload_file_unavailable">Upload file: not available yet.</string>
     <string name="checklist_detail_no_items">No items in this checklist yet.</string>
+    <string name="checklist_edit_action">Edit checklist</string>
+    <string name="checklist_edit_title">Edit checklist</string>
 </resources>

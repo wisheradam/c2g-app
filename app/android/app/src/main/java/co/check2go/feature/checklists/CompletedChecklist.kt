@@ -59,6 +59,43 @@ fun ChecklistDraft.toSavedChecklist(id: Long): CompletedChecklist = CompletedChe
     }
 )
 
+/**
+ * Prefill for CHECKLIST_EDIT (docs/flows.md Flow 8, step 2): the inverse of [toSavedChecklist].
+ * Item/section ids are carried over unchanged so a later [withDraftApplied] can match edited items
+ * back to their saved completion state by id.
+ */
+fun CompletedChecklist.toDraft(): ChecklistDraft = ChecklistDraft(
+    name = name,
+    sections = sections.map { ChecklistSection(id = it.id, name = it.name) },
+    items = items.map { item ->
+        ChecklistItemDraft(id = item.id, name = item.name, sectionId = item.sectionId, includeFile = item.includeFile)
+    }
+)
+
+/**
+ * Applies an edited [draft] (CHECKLIST_EDIT "Save changes", Flow 8 step 4) back onto this saved
+ * checklist, keeping [id] fixed. An item id already present on this checklist is logically
+ * unchanged and keeps its current completion state even if its name/section changed in the editor;
+ * an item id that is new to this checklist starts uncompleted (mirrors [toSavedChecklist]); an item
+ * id from this checklist that is absent from [draft] was removed in the editor and is dropped.
+ */
+fun CompletedChecklist.withDraftApplied(draft: ChecklistDraft): CompletedChecklist {
+    val completionById = items.associate { it.id to it.completed }
+    return copy(
+        name = draft.name,
+        sections = draft.sections.map { SavedChecklistSection(id = it.id, name = it.name) },
+        items = draft.items.map { item ->
+            SavedChecklistItem(
+                id = item.id,
+                name = item.name,
+                sectionId = item.sectionId,
+                includeFile = item.includeFile,
+                completed = completionById[item.id] ?: false
+            )
+        }
+    )
+}
+
 /** Flips [itemId]'s completion. Pure transformation kept outside the rendering composable. */
 fun CompletedChecklist.withItemCompletionToggled(itemId: Long): CompletedChecklist = copy(
     items = items.map { item -> if (item.id == itemId) item.copy(completed = !item.completed) else item }

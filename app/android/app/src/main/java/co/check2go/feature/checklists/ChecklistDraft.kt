@@ -43,6 +43,15 @@ fun ChecklistDraft.withSectionRemoved(sectionId: Long): ChecklistDraft = copy(
     }
 )
 
+/**
+ * Renames the section with [sectionId] to [name], leaving its [ChecklistSection.id] -- and every
+ * item's [ChecklistItemDraft.sectionId] reference to it -- unchanged (docs/flows.md Flow 8, step
+ * 3: "Change title/... sections").
+ */
+fun ChecklistDraft.withSectionRenamed(sectionId: Long, name: String): ChecklistDraft = copy(
+    sections = sections.map { section -> if (section.id == sectionId) section.copy(name = name) else section }
+)
+
 /** Appends [item] to the draft. Pure transformation kept outside the rendering composable. */
 fun ChecklistDraft.withItemAdded(item: ChecklistItemDraft): ChecklistDraft =
     copy(items = items + item)
@@ -50,6 +59,32 @@ fun ChecklistDraft.withItemAdded(item: ChecklistItemDraft): ChecklistDraft =
 /** Removes the item with [itemId] from the draft. */
 fun ChecklistDraft.withItemRemoved(itemId: Long): ChecklistDraft =
     copy(items = items.filterNot { it.id == itemId })
+
+/**
+ * Renames the item with [itemId] to [name], leaving its [ChecklistItemDraft.id] unchanged so a
+ * later [withDraftApplied] still matches it to its saved completion state (docs/flows.md Flow 8,
+ * step 3: "Change title/.../items").
+ */
+fun ChecklistDraft.withItemNameChanged(itemId: Long, name: String): ChecklistDraft = copy(
+    items = items.map { item -> if (item.id == itemId) item.copy(name = name) else item }
+)
+
+/**
+ * Reassigns the item with [itemId] to [sectionId] (or `null` for no section), leaving its
+ * [ChecklistItemDraft.id] unchanged (docs/flows.md Flow 8, step 3: "Change title/.../sections").
+ */
+fun ChecklistDraft.withItemSectionChanged(itemId: Long, sectionId: Long?): ChecklistDraft = copy(
+    items = items.map { item -> if (item.id == itemId) item.copy(sectionId = sectionId) else item }
+)
+
+/**
+ * Flips whether the item with [itemId] requires an attached file, leaving its
+ * [ChecklistItemDraft.id] unchanged (docs/flows.md Flow 8, step 3: "Change title/.../file
+ * requirements").
+ */
+fun ChecklistDraft.withItemIncludeFileChanged(itemId: Long, includeFile: Boolean): ChecklistDraft = copy(
+    items = items.map { item -> if (item.id == itemId) item.copy(includeFile = includeFile) else item }
+)
 
 // Control characters rather than normal punctuation, so they cannot collide with user-entered
 // checklist/section/item names. Distinct from CompletedTripListSaver's separator since these are
