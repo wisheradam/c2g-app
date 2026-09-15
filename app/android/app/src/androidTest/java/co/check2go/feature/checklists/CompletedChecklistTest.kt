@@ -252,6 +252,124 @@ class CompletedChecklistTest {
     }
 
     @Test
+    fun duplicateAssignsTheGivenIdAndPreservesTheNameAndStructure() {
+        val checklist = CompletedChecklist(
+            id = 1L,
+            name = "Before leaving",
+            sections = listOf(SavedChecklistSection(id = 1L, name = "Documents")),
+            items = listOf(
+                SavedChecklistItem(id = 1L, name = "Passport", sectionId = 1L, includeFile = true, completed = true),
+                SavedChecklistItem(id = 2L, name = "Charger", sectionId = null, includeFile = false, completed = false)
+            )
+        )
+        var nextSectionId = 50L
+        var nextItemId = 100L
+
+        val duplicated = checklist.duplicate(
+            id = 99L,
+            nextSectionId = { nextSectionId++ },
+            nextItemId = { nextItemId++ }
+        )
+
+        assertEquals(99L, duplicated.id)
+        assertEquals("Before leaving", duplicated.name)
+        assertEquals(1, duplicated.sections.size)
+        assertEquals("Documents", duplicated.sections.single().name)
+        assertEquals(2, duplicated.items.size)
+        assertEquals("Passport", duplicated.items[0].name)
+        assertEquals(true, duplicated.items[0].includeFile)
+        assertEquals("Charger", duplicated.items[1].name)
+        assertEquals(false, duplicated.items[1].includeFile)
+    }
+
+    @Test
+    fun duplicateResetsEveryCopiedItemsCompletionToFalseRegardlessOfTheSourcesState() {
+        val checklist = CompletedChecklist(
+            id = 1L,
+            name = "Packing",
+            items = listOf(
+                SavedChecklistItem(id = 1L, name = "A", sectionId = null, includeFile = false, completed = true),
+                SavedChecklistItem(id = 2L, name = "B", sectionId = null, includeFile = false, completed = false)
+            )
+        )
+
+        val duplicated = checklist.duplicate(id = 2L, nextSectionId = { 1L }, nextItemId = { 1L })
+
+        assertTrue(duplicated.items.none { it.completed })
+    }
+
+    @Test
+    fun duplicateAssignsFreshSectionAndItemIdsRatherThanReusingTheSources() {
+        val checklist = CompletedChecklist(
+            id = 1L,
+            name = "Before leaving",
+            sections = listOf(SavedChecklistSection(id = 1L, name = "Documents")),
+            items = listOf(SavedChecklistItem(id = 1L, name = "Passport", sectionId = 1L, includeFile = false, completed = false))
+        )
+        var nextSectionId = 10L
+        var nextItemId = 20L
+
+        val duplicated = checklist.duplicate(
+            id = 2L,
+            nextSectionId = { nextSectionId++ },
+            nextItemId = { nextItemId++ }
+        )
+
+        // Ids come from the injected generators, not the source checklist's own ids -- so a
+        // duplicate can never collide with the source or with anything assigned after it.
+        assertEquals(10L, duplicated.sections.single().id)
+        assertEquals(20L, duplicated.items.single().id)
+    }
+
+    @Test
+    fun duplicateRemapsItemSectionAssignmentsOntoTheCopiedSectionIds() {
+        val checklist = CompletedChecklist(
+            id = 1L,
+            name = "Before leaving",
+            sections = listOf(
+                SavedChecklistSection(id = 1L, name = "Documents"),
+                SavedChecklistSection(id = 2L, name = "Electronics")
+            ),
+            items = listOf(
+                SavedChecklistItem(id = 1L, name = "Passport", sectionId = 1L, includeFile = false, completed = false),
+                SavedChecklistItem(id = 2L, name = "Charger", sectionId = 2L, includeFile = false, completed = false),
+                SavedChecklistItem(id = 3L, name = "Notebook", sectionId = null, includeFile = false, completed = false)
+            )
+        )
+        var nextSectionId = 100L
+        var nextItemId = 200L
+
+        val duplicated = checklist.duplicate(
+            id = 2L,
+            nextSectionId = { nextSectionId++ },
+            nextItemId = { nextItemId++ }
+        )
+
+        val documentsCopyId = duplicated.sections.first { it.name == "Documents" }.id
+        val electronicsCopyId = duplicated.sections.first { it.name == "Electronics" }.id
+        assertEquals(documentsCopyId, duplicated.items.first { it.name == "Passport" }.sectionId)
+        assertEquals(electronicsCopyId, duplicated.items.first { it.name == "Charger" }.sectionId)
+        assertEquals(null, duplicated.items.first { it.name == "Notebook" }.sectionId)
+    }
+
+    @Test
+    fun duplicateDoesNotMutateTheSourceChecklist() {
+        val original = CompletedChecklist(
+            id = 1L,
+            name = "Before leaving",
+            sections = listOf(SavedChecklistSection(id = 1L, name = "Documents")),
+            items = listOf(
+                SavedChecklistItem(id = 1L, name = "Passport", sectionId = 1L, includeFile = true, completed = true)
+            )
+        )
+        val snapshot = original.copy()
+
+        original.duplicate(id = 2L, nextSectionId = { 1L }, nextItemId = { 1L })
+
+        assertEquals(snapshot, original)
+    }
+
+    @Test
     fun listSaverRoundTripsMultipleChecklistsIncludingEmptyNamesAndUnsectionedItems() {
         val checklists = listOf(
             CompletedChecklist(

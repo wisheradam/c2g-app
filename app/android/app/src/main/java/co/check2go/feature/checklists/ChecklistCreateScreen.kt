@@ -55,8 +55,11 @@ import co.check2go.ui.theme.Check2GoTheme
  * live in `Check2GoApp`.
  *
  * Out of scope for this task: checklist photo, real file attachment, trip linkage, Use now, and
- * share/duplicate/delete (docs/screen-inventory.md "Create / Edit Checklist" lists these, but the
- * task scope excludes them here).
+ * share/delete (docs/screen-inventory.md "Create / Edit Checklist" lists these, but the task scope
+ * excludes them here). "Duplicate checklist" (docs/flows.md Flow 9) is in scope but only meaningful
+ * once something is actually saved to duplicate, so [onDuplicateChecklist] is nullable and the
+ * caller only supplies it for CHECKLIST_EDIT (an existing saved checklist), never for
+ * CHECKLIST_CREATE (nothing saved yet); the action is hidden when null.
  *
  * All draft mutation is delegated to the caller: this composable only reads [draft] and the
  * transient new-item form fields, and forwards user intents through callbacks. It performs no
@@ -93,7 +96,8 @@ fun ChecklistCreateScreen(
     onBack: () -> Unit,
     onSave: () -> Unit,
     modifier: Modifier = Modifier,
-    title: String = stringResource(R.string.checklist_create_title)
+    title: String = stringResource(R.string.checklist_create_title),
+    onDuplicateChecklist: (() -> Unit)? = null
 ) {
     val canSave = draft.name.isNotBlank() &&
         draft.sections.all { it.name.isNotBlank() } &&
@@ -108,6 +112,13 @@ fun ChecklistCreateScreen(
                 navigationIcon = {
                     TextButton(onClick = onBack) {
                         Text(text = stringResource(R.string.trip_back))
+                    }
+                },
+                actions = {
+                    if (onDuplicateChecklist != null) {
+                        TextButton(onClick = onDuplicateChecklist) {
+                            Text(text = stringResource(R.string.checklist_duplicate_action))
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(

@@ -679,4 +679,155 @@ class Check2GoAppTest {
         composeRule.onNodeWithTag("checklist_item_section_field_1").assertTextContains("No section", substring = true)
         composeRule.onNodeWithTag("checklist_item_include_file_toggle_1").assertIsOff()
     }
+
+    @Test
+    fun duplicatingFromDetailShowsConfirmationAndGoBackReturnsToTheSourceDetailUnchanged() {
+        composeRule.setContent {
+            Check2GoTheme {
+                Check2GoApp(onTripCreateComplete = { _, _, _ -> })
+            }
+        }
+
+        createChecklistWithOneItem("Before leaving", "Passport")
+        composeRule.onNodeWithText("Before leaving").performClick()
+        composeRule.onNodeWithTag("checklist_detail_item_row_1").performClick()
+        composeRule.onNodeWithText("100% complete").assertIsDisplayed()
+
+        composeRule.onNodeWithText("Duplicate checklist").performClick()
+
+        composeRule.onNodeWithText("A copy has been created").assertIsDisplayed()
+        composeRule.onNodeWithText("Go back").performClick()
+
+        // Back on the source's own CHECKLIST_DETAIL, unaffected by the duplication.
+        composeRule.onNodeWithTag("checklist_detail_completion").assertTextContains("100% complete")
+        composeRule.onNodeWithTag("checklist_detail_item_row_1").assertIsOn()
+    }
+
+    @Test
+    fun duplicatingFromDetailUseNowOpensTheCopysOwnDetailWithCompletionReset() {
+        composeRule.setContent {
+            Check2GoTheme {
+                Check2GoApp(onTripCreateComplete = { _, _, _ -> })
+            }
+        }
+
+        createChecklistWithOneItem("Before leaving", "Passport")
+        composeRule.onNodeWithText("Before leaving").performClick()
+        composeRule.onNodeWithTag("checklist_detail_item_row_1").performClick()
+        composeRule.onNodeWithText("100% complete").assertIsDisplayed()
+
+        composeRule.onNodeWithText("Duplicate checklist").performClick()
+        composeRule.onNodeWithText("Use now").performClick()
+
+        // The copy's own CHECKLIST_DETAIL: same title/items, but completion reset (a fresh,
+        // unstarted checklist), not the 100% the source item was toggled to.
+        composeRule.onAllNodesWithText("Before leaving").assertCountEquals(1)
+        composeRule.onNodeWithText("Passport").assertIsDisplayed()
+        composeRule.onNodeWithText("0% complete").assertIsDisplayed()
+
+        // The copy's item is a brand-new SavedChecklistItem drawn from the shared nextItemId
+        // counter (CompletedChecklist.duplicate), not a reuse of the source item's id -- so its
+        // row tag is "_2", the next id after the source item's own "_1".
+        composeRule.onNodeWithTag("checklist_detail_item_row_2").assertIsOff()
+    }
+
+    @Test
+    fun duplicateIsASeparatelySavedCopyThatAppearsAlongsideTheUnaffectedSourceInThePopulatedList() {
+        composeRule.setContent {
+            Check2GoTheme {
+                Check2GoApp(onTripCreateComplete = { _, _, _ -> })
+            }
+        }
+
+        createChecklistWithOneItem("Before leaving", "Passport")
+        composeRule.onNodeWithText("Before leaving").performClick()
+        composeRule.onNodeWithTag("checklist_detail_item_row_1").performClick()
+
+        composeRule.onNodeWithText("Duplicate checklist").performClick()
+        composeRule.onNodeWithText("Use now").performClick()
+        composeRule.onNodeWithText("Back").performClick()
+
+        // Two distinct rows on CHECKLISTS_POPULATED: the original (still 100%) and the new copy
+        // (0%), proving the copy is its own saved checklist rather than replacing the source.
+        composeRule.onNodeWithTag("checklist_card_1").assertIsDisplayed()
+        composeRule.onNodeWithTag("checklist_card_2").assertIsDisplayed()
+        composeRule.onAllNodesWithText("Before leaving").assertCountEquals(2)
+        composeRule.onAllNodesWithText("100% complete").assertCountEquals(1)
+        composeRule.onAllNodesWithText("0% complete").assertCountEquals(1)
+    }
+
+    @Test
+    fun duplicatingFromTheEditorDuplicatesTheSavedChecklistAndGoBackReturnsToTheEditor() {
+        composeRule.setContent {
+            Check2GoTheme {
+                Check2GoApp(onTripCreateComplete = { _, _, _ -> })
+            }
+        }
+
+        createChecklistWithOneItem("Before leaving", "Passport")
+        composeRule.onNodeWithText("Before leaving").performClick()
+        composeRule.onNodeWithText("Edit checklist").performClick()
+
+        // Unsaved in-progress rename: Duplicate should copy the saved checklist ("Before leaving"),
+        // not this unsaved edit.
+        composeRule.onNodeWithText("Before leaving").performTextClearance()
+        composeRule.onNodeWithText("Checklist name").performTextInput("Renamed but unsaved")
+
+        composeRule.onNodeWithText("Duplicate checklist").performClick()
+
+        composeRule.onNodeWithText("A copy has been created").assertIsDisplayed()
+        composeRule.onNodeWithText("Before leaving").assertIsDisplayed()
+
+        composeRule.onNodeWithText("Go back").performClick()
+
+        // Back on CHECKLIST_EDIT, with the unsaved rename still in place (Duplicate did not save
+        // or discard it).
+        composeRule.onNodeWithText("Renamed but unsaved").assertIsDisplayed()
+    }
+
+    @Test
+    fun duplicatingFromTheEditorUseNowOpensTheCopysDetailLeavingTheEditsSourceUnsaved() {
+        composeRule.setContent {
+            Check2GoTheme {
+                Check2GoApp(onTripCreateComplete = { _, _, _ -> })
+            }
+        }
+
+        createChecklistWithOneItem("Before leaving", "Passport")
+        composeRule.onNodeWithText("Before leaving").performClick()
+        composeRule.onNodeWithText("Edit checklist").performClick()
+
+        composeRule.onNodeWithText("Duplicate checklist").performClick()
+        composeRule.onNodeWithText("Use now").performClick()
+
+        // The duplicate's own detail, carrying the item forward.
+        composeRule.onNodeWithText("Passport").assertIsDisplayed()
+        composeRule.onNodeWithText("0% complete").assertIsDisplayed()
+
+        composeRule.onNodeWithText("Back").performClick()
+
+        // Both the source and the copy exist; the source was never renamed since Edit's "Save
+        // changes" was never pressed.
+        composeRule.onAllNodesWithText("Before leaving").assertCountEquals(2)
+    }
+
+    @Test
+    fun systemBackFromDuplicateConfirmationBehavesLikeGoBack() {
+        composeRule.setContent {
+            Check2GoTheme {
+                Check2GoApp(onTripCreateComplete = { _, _, _ -> })
+            }
+        }
+
+        createChecklistWithOneItem("Before leaving", "Passport")
+        composeRule.onNodeWithText("Before leaving").performClick()
+        composeRule.onNodeWithText("Duplicate checklist").performClick()
+        composeRule.onNodeWithText("A copy has been created").assertIsDisplayed()
+
+        InstrumentationRegistry.getInstrumentation().sendKeyDownUpSync(KeyEvent.KEYCODE_BACK)
+
+        // Back on the source's CHECKLIST_DETAIL, same as tapping "Go back" would do.
+        composeRule.onNodeWithText("Passport").assertIsDisplayed()
+        composeRule.onNodeWithText("Edit checklist").assertIsDisplayed()
+    }
 }

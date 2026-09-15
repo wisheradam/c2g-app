@@ -30,7 +30,13 @@ class ChecklistDetailScreenTest {
     fun showsTitleCompletionAndGroupedSectionsWithAnUnsectionedGroup() {
         composeRule.setContent {
             Check2GoTheme(darkTheme = false) {
-                ChecklistDetailScreen(checklist = checklist, onToggleItem = {}, onEditChecklist = {}, onBack = {})
+                ChecklistDetailScreen(
+                    checklist = checklist,
+                    onToggleItem = {},
+                    onEditChecklist = {},
+                    onDuplicateChecklist = {},
+                    onBack = {}
+                )
             }
         }
 
@@ -47,7 +53,13 @@ class ChecklistDetailScreenTest {
     fun itemChecklistBoxesReflectTheirCompletedState() {
         composeRule.setContent {
             Check2GoTheme(darkTheme = false) {
-                ChecklistDetailScreen(checklist = checklist, onToggleItem = {}, onEditChecklist = {}, onBack = {})
+                ChecklistDetailScreen(
+                    checklist = checklist,
+                    onToggleItem = {},
+                    onEditChecklist = {},
+                    onDuplicateChecklist = {},
+                    onBack = {}
+                )
             }
         }
 
@@ -65,6 +77,7 @@ class ChecklistDetailScreenTest {
                     checklist = checklist,
                     onToggleItem = { toggledId = it },
                     onEditChecklist = {},
+                    onDuplicateChecklist = {},
                     onBack = {}
                 )
             }
@@ -85,6 +98,7 @@ class ChecklistDetailScreenTest {
                     checklist = checklist,
                     onToggleItem = {},
                     onEditChecklist = { editInvoked = true },
+                    onDuplicateChecklist = {},
                     onBack = {}
                 )
             }
@@ -96,10 +110,37 @@ class ChecklistDetailScreenTest {
     }
 
     @Test
+    fun tappingDuplicateChecklistInvokesOnDuplicateChecklist() {
+        var duplicateInvoked = false
+
+        composeRule.setContent {
+            Check2GoTheme(darkTheme = false) {
+                ChecklistDetailScreen(
+                    checklist = checklist,
+                    onToggleItem = {},
+                    onEditChecklist = {},
+                    onDuplicateChecklist = { duplicateInvoked = true },
+                    onBack = {}
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("Duplicate checklist").performClick()
+
+        assertEquals(true, duplicateInvoked)
+    }
+
+    @Test
     fun includeFileItemShowsAnUnavailableNoteAndNoFunctioningUploadControl() {
         composeRule.setContent {
             Check2GoTheme(darkTheme = false) {
-                ChecklistDetailScreen(checklist = checklist, onToggleItem = {}, onEditChecklist = {}, onBack = {})
+                ChecklistDetailScreen(
+                    checklist = checklist,
+                    onToggleItem = {},
+                    onEditChecklist = {},
+                    onDuplicateChecklist = {},
+                    onBack = {}
+                )
             }
         }
 
@@ -117,7 +158,13 @@ class ChecklistDetailScreenTest {
 
         composeRule.setContent {
             Check2GoTheme(darkTheme = false) {
-                ChecklistDetailScreen(checklist = emptyChecklist, onToggleItem = {}, onEditChecklist = {}, onBack = {})
+                ChecklistDetailScreen(
+                    checklist = emptyChecklist,
+                    onToggleItem = {},
+                    onEditChecklist = {},
+                    onDuplicateChecklist = {},
+                    onBack = {}
+                )
             }
         }
 
@@ -138,7 +185,13 @@ class ChecklistDetailScreenTest {
 
         composeRule.setContent {
             Check2GoTheme(darkTheme = false) {
-                ChecklistDetailScreen(checklist = fullChecklist, onToggleItem = {}, onEditChecklist = {}, onBack = {})
+                ChecklistDetailScreen(
+                    checklist = fullChecklist,
+                    onToggleItem = {},
+                    onEditChecklist = {},
+                    onDuplicateChecklist = {},
+                    onBack = {}
+                )
             }
         }
 
@@ -155,6 +208,7 @@ class ChecklistDetailScreenTest {
                     checklist = checklist,
                     onToggleItem = {},
                     onEditChecklist = {},
+                    onDuplicateChecklist = {},
                     onBack = { backInvoked = true }
                 )
             }

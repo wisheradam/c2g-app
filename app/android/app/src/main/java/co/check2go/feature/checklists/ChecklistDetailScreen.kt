@@ -35,11 +35,14 @@ import co.check2go.ui.theme.Check2GoTheme
  * Shared screen ID: CHECKLIST_DETAIL (docs/flows.md Flow 6; docs/screen-inventory.md "Checklist
  * Detail"). Reached by tapping a row on CHECKLISTS_POPULATED.
  *
- * Out of scope for this task: partner promos, notifications/deadlines, Duplicate/Delete/Share
+ * Out of scope for this task: partner promos, notifications/deadlines, Delete/Share
  * (docs/screen-inventory.md lists these for the historical PDF screens, but the task scope excludes
  * them here), and real file attachment -- items with `includeFile` show only a temporary/unavailable
  * note, never a functioning picker/storage/backend. "Edit checklist" (docs/flows.md Flow 8) opens
- * CHECKLIST_EDIT via [onEditChecklist].
+ * CHECKLIST_EDIT via [onEditChecklist]. "Duplicate checklist" (docs/flows.md Flow 9) creates a copy
+ * via [onDuplicateChecklist]; this screen does not perform the duplication itself, it only signals
+ * the intent, since -- like completion toggling -- id assignment and where the copy is stored is
+ * caller state.
  *
  * Stateless: [checklist] is the single source of truth for both the shown completion percentage and
  * grouping, and toggling delegates to [onToggleItem] so the caller (which also drives
@@ -51,6 +54,7 @@ fun ChecklistDetailScreen(
     checklist: CompletedChecklist,
     onToggleItem: (Long) -> Unit,
     onEditChecklist: () -> Unit,
+    onDuplicateChecklist: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -66,6 +70,9 @@ fun ChecklistDetailScreen(
                     }
                 },
                 actions = {
+                    TextButton(onClick = onDuplicateChecklist) {
+                        Text(text = stringResource(R.string.checklist_duplicate_action))
+                    }
                     TextButton(onClick = onEditChecklist) {
                         Text(text = stringResource(R.string.checklist_edit_action))
                     }
@@ -198,6 +205,7 @@ private fun ChecklistDetailPreview() {
             ),
             onToggleItem = {},
             onEditChecklist = {},
+            onDuplicateChecklist = {},
             onBack = {}
         )
     }
