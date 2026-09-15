@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Check2GO</string>
+    <string name="app_logo_content_description">Check2GO logo</string>
     <string name="home_hero_title">Start your first journey!</string>
     <!-- Temporary source-level copy until the exact design copy is recovered. -->
     <string name="home_supporting_copy">Add trips to the app.</string>
