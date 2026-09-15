@@ -325,4 +325,74 @@ class ChecklistCreateScreenTest {
 
         assertEquals(true, result.backInvoked)
     }
+
+    @Test
+    fun duplicateChecklistActionIsHiddenWhenOnDuplicateChecklistIsNull() {
+        composeRule.setContent {
+            Check2GoTheme {
+                ChecklistCreateScreen(
+                    draft = ChecklistDraft(),
+                    onNameChange = {},
+                    newSectionName = "",
+                    onNewSectionNameChange = {},
+                    onAddSection = {},
+                    onSectionNameChange = { _, _ -> },
+                    onRemoveSection = {},
+                    newItemName = "",
+                    onNewItemNameChange = {},
+                    newItemSectionId = null,
+                    onNewItemSectionIdChange = {},
+                    newItemIncludeFile = false,
+                    onNewItemIncludeFileChange = {},
+                    onAddItem = {},
+                    onItemNameChange = { _, _ -> },
+                    onItemSectionChange = { _, _ -> },
+                    onItemIncludeFileChange = { _, _ -> },
+                    onRemoveItem = {},
+                    onBack = {},
+                    onSave = {},
+                    onDuplicateChecklist = null
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("Duplicate checklist").assertDoesNotExist()
+    }
+
+    @Test
+    fun duplicateChecklistActionInvokesOnDuplicateChecklistWhenProvided() {
+        var duplicateInvoked = false
+
+        composeRule.setContent {
+            Check2GoTheme {
+                ChecklistCreateScreen(
+                    draft = ChecklistDraft(),
+                    onNameChange = {},
+                    newSectionName = "",
+                    onNewSectionNameChange = {},
+                    onAddSection = {},
+                    onSectionNameChange = { _, _ -> },
+                    onRemoveSection = {},
+                    newItemName = "",
+                    onNewItemNameChange = {},
+                    newItemSectionId = null,
+                    onNewItemSectionIdChange = {},
+                    newItemIncludeFile = false,
+                    onNewItemIncludeFileChange = {},
+                    onAddItem = {},
+                    onItemNameChange = { _, _ -> },
+                    onItemSectionChange = { _, _ -> },
+                    onItemIncludeFileChange = { _, _ -> },
+                    onRemoveItem = {},
+                    onBack = {},
+                    onSave = {},
+                    onDuplicateChecklist = { duplicateInvoked = true }
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("Duplicate checklist").performClick()
+
+        assertEquals(true, duplicateInvoked)
+    }
 }

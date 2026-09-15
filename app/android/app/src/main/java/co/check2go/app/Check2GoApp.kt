@@ -13,12 +13,14 @@ import co.check2go.feature.checklists.ChecklistCreateScreen
 import co.check2go.feature.checklists.ChecklistDetailScreen
 import co.check2go.feature.checklists.ChecklistDraft
 import co.check2go.feature.checklists.ChecklistDraftSaver
+import co.check2go.feature.checklists.ChecklistDuplicateConfirmationScreen
 import co.check2go.feature.checklists.ChecklistItemDraft
 import co.check2go.feature.checklists.ChecklistSection
 import co.check2go.feature.checklists.ChecklistsEmptyScreen
 import co.check2go.feature.checklists.ChecklistsPopulatedScreen
 import co.check2go.feature.checklists.CompletedChecklist
 import co.check2go.feature.checklists.CompletedChecklistListSaver
+import co.check2go.feature.checklists.duplicate
 import co.check2go.feature.checklists.toDraft
 import co.check2go.feature.checklists.toSavedChecklist
 import co.check2go.feature.checklists.withDraftApplied
@@ -45,13 +47,23 @@ import co.check2go.feature.trip.TripFilter
 import co.check2go.feature.trip.TripTravelersDraft
 
 private enum class AppScreen {
-    Home, Checklists, ChecklistCreate, ChecklistDetail, ChecklistEdit, TripDestination, TripDates, TripTravelers
+    Home,
+    Checklists,
+    ChecklistCreate,
+    ChecklistDetail,
+    ChecklistEdit,
+    ChecklistDuplicateConfirmation,
+    TripDestination,
+    TripDates,
+    TripTravelers
 }
 
 /**
  * Minimal app-level navigation for HOME_EMPTY/HOME_TRIPS <-> CHECKLISTS_EMPTY/CHECKLISTS_POPULATED
- * <-> CHECKLIST_CREATE, CHECKLISTS_POPULATED -> CHECKLIST_DETAIL <-> CHECKLIST_EDIT, and
- * HOME_EMPTY/HOME_TRIPS -> TRIP_CREATE_DESTINATION -> TRIP_CREATE_DATES -> TRIP_CREATE_TRAVELERS.
+ * <-> CHECKLIST_CREATE, CHECKLISTS_POPULATED -> CHECKLIST_DETAIL <-> CHECKLIST_EDIT, CHECKLIST_DETAIL
+ * / CHECKLIST_EDIT -> CHECKLIST_DUPLICATE_CONFIRMATION -> (back to that same context, or into the
+ * duplicate's own CHECKLIST_DETAIL), and HOME_EMPTY/HOME_TRIPS -> TRIP_CREATE_DESTINATION ->
+ * TRIP_CREATE_DATES -> TRIP_CREATE_TRAVELERS.
  *
  * [onChecklistCreated] mirrors [onTripCreateComplete]: an app-level hook fired once CHECKLIST_CREATE
  * "Save changes" (Flow 7, step 7) succeeds, receiving the full structured draft.
@@ -101,6 +113,15 @@ fun Check2GoApp(
     var nextChecklistId by rememberSaveable { mutableStateOf(1L) }
     var selectedChecklistId by rememberSaveable { mutableStateOf<Long?>(null) }
 
+    // CHECKLIST_DUPLICATE_CONFIRMATION state: the id of the just-created copy (so the confirmation
+    // screen and its "Use now" both know which checklist to show), and which screen "Go back"
+    // returns to -- CHECKLIST_DETAIL or CHECKLIST_EDIT, whichever hosted the "Duplicate checklist"
+    // action that led here (docs/flows.md Flow 9 step 4). selectedChecklistId itself is left
+    // pointing at the *source* checklist throughout, so "Go back" lands on the same
+    // detail/editor context the user started from.
+    var duplicatedChecklistId by rememberSaveable { mutableStateOf<Long?>(null) }
+    var duplicateReturnScreen by rememberSaveable { mutableStateOf(AppScreen.ChecklistDetail) }
+
     // CHECKLIST_EDIT draft: a separate hoisted draft from checklistDraft above so an in-progress
     // CHECKLIST_CREATE draft is never clobbered by opening Edit on a saved checklist. Unlike
     // checklistDraft, this one is always re-seeded from the saved checklist when Edit opens (see
@@ -131,6 +152,23 @@ fun Check2GoApp(
     val startNewTripDraft = {
         resetTripDraft()
         screen = AppScreen.TripDestination
+    }
+
+    // Shared by CHECKLIST_DETAIL and CHECKLIST_EDIT's "Duplicate checklist" actions (docs/flows.md
+    // Flow 9): always duplicates the saved [source], never an in-progress unsaved editor draft, and
+    // reuses the same nextSectionId/nextItemId counters the editors use for their own new
+    // sections/items so the copy's ids can never collide with anything assigned later.
+    val duplicateChecklist = { source: CompletedChecklist, returnScreen: AppScreen ->
+        val duplicated = source.duplicate(
+            id = nextChecklistId,
+            nextSectionId = { val id = nextSectionId; nextSectionId += 1; id },
+            nextItemId = { val id = nextItemId; nextItemId += 1; id }
+        )
+        nextChecklistId += 1
+        checklists = checklists + duplicated
+        duplicatedChecklistId = duplicated.id
+        duplicateReturnScreen = returnScreen
+        screen = AppScreen.ChecklistDuplicateConfirmation
     }
 
     // Documents/Events have no DOCUMENTS_HOME/EVENTS_HOME screen yet (docs/screen-inventory.md),
@@ -264,9 +302,9 @@ fun Check2GoApp(
         AppScreen.ChecklistDetail -> {
             val navigateToChecklists = { screen = AppScreen.Checklists }
             BackHandler(onBack = navigateToChecklists)
-            // CHECKLIST_DETAIL is only reached via a CHECKLISTS_POPULATED row tap, which always
-            // sets selectedChecklistId to a checklist that currently exists (this app has no
-            // delete/duplicate, out of scope), so this lookup always resolves.
+            // CHECKLIST_DETAIL is only reached via a CHECKLISTS_POPULATED row tap or a duplicate's
+            // "Use now", both of which always set selectedChecklistId to a checklist that currently
+            // exists (this app has no delete, out of scope), so this lookup always resolves.
             val selectedChecklist = checklists.first { it.id == selectedChecklistId }
             ChecklistDetailScreen(
                 checklist = selectedChecklist,
@@ -287,6 +325,7 @@ fun Check2GoApp(
                     editNewItemIncludeFile = false
                     screen = AppScreen.ChecklistEdit
                 },
+                onDuplicateChecklist = { duplicateChecklist(selectedChecklist, AppScreen.ChecklistDetail) },
                 onBack = navigateToChecklists
             )
         }
@@ -363,6 +402,29 @@ fun Check2GoApp(
                     checklists = checklists.map { checklist ->
                         if (checklist.id == editedChecklistId) checklist.withDraftApplied(savedDraft) else checklist
                     }
+                    screen = AppScreen.ChecklistDetail
+                },
+                // Duplicates the saved checklist as it currently exists, not this screen's unsaved
+                // in-progress edits -- consistent with "Back discards unsaved edits" above: nothing
+                // typed in this editor is visible anywhere else until Save is pressed.
+                onDuplicateChecklist = {
+                    val savedChecklist = checklists.first { it.id == editedChecklistId }
+                    duplicateChecklist(savedChecklist, AppScreen.ChecklistEdit)
+                }
+            )
+        }
+
+        AppScreen.ChecklistDuplicateConfirmation -> {
+            val goBackToSource = { screen = duplicateReturnScreen }
+            BackHandler(onBack = goBackToSource)
+            // Only reachable right after duplicateChecklist() set duplicatedChecklistId to a
+            // checklist it just appended to `checklists`, so this lookup always resolves.
+            val duplicatedChecklist = checklists.first { it.id == duplicatedChecklistId }
+            ChecklistDuplicateConfirmationScreen(
+                checklistName = duplicatedChecklist.name,
+                onGoBack = goBackToSource,
+                onUseNow = {
+                    selectedChecklistId = duplicatedChecklist.id
                     screen = AppScreen.ChecklistDetail
                 }
             )

@@ -102,6 +102,45 @@ fun CompletedChecklist.withItemCompletionToggled(itemId: Long): CompletedCheckli
 )
 
 /**
+ * Duplicates this checklist as a new, independently saved copy (docs/flows.md Flow 9 step 2;
+ * docs/screen-inventory.md "Duplicate success bottom sheet"). The receiver is never mutated.
+ *
+ * Title, section names, item names/section-assignments and include-file requirements are all
+ * preserved, and every copied item's completion is reset to `false` regardless of the source
+ * item's state (a duplicate is a fresh unstarted checklist, not a completion snapshot).
+ *
+ * [id] becomes the new checklist's id. Sections and items also get brand-new ids drawn from
+ * [nextSectionId]/[nextItemId] -- the same counters the CHECKLIST_CREATE/CHECKLIST_EDIT editors use
+ * for their own new sections/items -- rather than reusing the source checklist's ids, so a duplicate
+ * can never collide with an id assigned to something else later. Item-to-section references are
+ * remapped through the newly assigned section ids so items stay associated with their (copied)
+ * section.
+ */
+fun CompletedChecklist.duplicate(
+    id: Long,
+    nextSectionId: () -> Long,
+    nextItemId: () -> Long
+): CompletedChecklist {
+    val sectionIdRemap = sections.associate { it.id to nextSectionId() }
+    return CompletedChecklist(
+        id = id,
+        name = name,
+        sections = sections.map { section ->
+            SavedChecklistSection(id = sectionIdRemap.getValue(section.id), name = section.name)
+        },
+        items = items.map { item ->
+            SavedChecklistItem(
+                id = nextItemId(),
+                name = item.name,
+                sectionId = item.sectionId?.let { sectionIdRemap.getValue(it) },
+                includeFile = item.includeFile,
+                completed = false
+            )
+        }
+    )
+}
+
+/**
  * Deterministic 0-100 completion percentage (docs/flows.md Flow 6, step 4). An empty checklist is
  * defined as 0% rather than 100%/NaN. Uses integer division (rounded down) instead of Float/Double
  * math so the result is exact and stable rather than depending on floating-point rounding.

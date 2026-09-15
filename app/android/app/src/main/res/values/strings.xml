@@ -94,4 +94,11 @@
     <string name="checklist_detail_no_items">No items in this checklist yet.</string>
     <string name="checklist_edit_action">Edit checklist</string>
     <string name="checklist_edit_title">Edit checklist</string>
+    <string name="checklist_duplicate_action">Duplicate checklist</string>
+    <!-- Temporary: docs/screen-inventory.md's "Duplicate success bottom sheet" (PDF page 41) has
+         exact bottom-sheet styling that has not been recovered, so this is a plain, clearly
+         temporary confirmation surface using only default Material3 styling. -->
+    <string name="checklist_duplicate_confirmation_title">A copy has been created</string>
+    <string name="checklist_duplicate_go_back">Go back</string>
+    <string name="checklist_duplicate_use_now">Use now</string>
 </resources>
