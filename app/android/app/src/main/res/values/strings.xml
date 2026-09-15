@@ -11,4 +11,13 @@
     <string name="nav_documents">Documents</string>
     <string name="nav_checklists">Checklists</string>
     <string name="nav_events">Events</string>
+    <string name="trip_create_destination_title">Choose your destination country</string>
+    <string name="trip_destination_country">Destination country</string>
+    <string name="trip_departure_country">Departure country</string>
+    <string name="trip_name">Trip name</string>
+    <string name="trip_autofill">Autofill</string>
+    <string name="trip_autofill_description">Autofill is not available yet</string>
+    <string name="trip_start">Start</string>
+    <string name="trip_back">Back</string>
+    <string name="trip_image_placeholder">Travel image placeholder</string>
 </resources>
