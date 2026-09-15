@@ -49,4 +49,13 @@
     <string name="trip_pets_no">No</string>
     <string name="trip_pets_yes">Yes</string>
     <string name="trip_complete">Complete</string>
+    <string name="trip_my_trips_title">My trips</string>
+    <string name="trip_filter_active">Active</string>
+    <string name="trip_filter_all">All</string>
+    <string name="trip_card_image_placeholder">Trip image placeholder</string>
+    <!-- Temporary: no archiving/upcoming/past business rule exists yet, see docs/screen-inventory.md. -->
+    <string name="trip_status_added">Trip added</string>
+    <string name="trip_dates_not_set">Dates not set</string>
+    <string name="trip_dates_round_trip_format">%1$s – %2$s</string>
+    <string name="trip_route_format">%1$s → %2$s</string>
 </resources>
