@@ -7,13 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.EmojiEvents
-import androidx.compose.material.icons.outlined.HelpOutline
-import androidx.compose.material.icons.outlined.NotificationsNone
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import co.check2go.R
 import co.check2go.core.design.AppDestination
+import co.check2go.core.design.AppHeader
 import co.check2go.core.design.AppNavigationBar
 import co.check2go.ui.theme.Check2GoTheme
 
@@ -44,31 +39,11 @@ fun HomeEmptyScreen(
     onDestinationSelected: (AppDestination) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val secondary = Color(0xFF8D919A)
     val quickAddLabel = stringResource(R.string.home_quick_add)
 
     Box(modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         Column(Modifier.fillMaxSize()) {
-            Row(
-                modifier = Modifier.fillMaxWidth().height(98.dp).background(Color.White)
-                    .statusBarsPadding().padding(horizontal = 16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(Icons.Outlined.EmojiEvents, contentDescription = null, tint = secondary, modifier = Modifier.size(24.dp))
-                Spacer(Modifier.weight(1f))
-                Text(stringResource(R.string.app_name), color = Color(0xFF002349), fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
-                Spacer(Modifier.weight(1f))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Outlined.Settings, contentDescription = null, tint = secondary, modifier = Modifier.size(24.dp))
-                    Spacer(Modifier.width(12.dp))
-                    Icon(Icons.Outlined.HelpOutline, contentDescription = null, tint = secondary, modifier = Modifier.size(24.dp))
-                    Spacer(Modifier.width(12.dp))
-                    Box {
-                        Icon(Icons.Outlined.NotificationsNone, contentDescription = null, tint = secondary, modifier = Modifier.size(24.dp))
-                        Box(Modifier.align(Alignment.TopEnd).size(5.dp).background(Color(0xFFC45777), CircleShape))
-                    }
-                }
-            }
+            AppHeader()
 
             Box(
                 Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp).fillMaxWidth().height(183.dp)
