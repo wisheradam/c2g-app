@@ -13,6 +13,10 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -61,6 +65,8 @@ fun TripCreateDatesScreen(
     onNextStep: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    var showTicketSheet by rememberSaveable { mutableStateOf(false) }
+    var datePickerTarget by rememberSaveable { mutableStateOf<String?>(null) }
     Box(modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         Column(Modifier.fillMaxSize()) {
             TripHeader(onBack)
@@ -70,14 +76,26 @@ fun TripCreateDatesScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 StepHero(oneWay)
-                QuickFillPanel(onLoadTicket)
+                QuickFillPanel {
+                    onLoadTicket()
+                    showTicketSheet = true
+                }
                 OneWayControl(oneWay, onOneWayChange)
-                DateField(stringResource(R.string.trip_departure_date), departureDate, onDepartureDateChange)
-                if (!oneWay) DateField(stringResource(R.string.trip_return_date), returnDate, onReturnDateChange)
+                DateField(stringResource(R.string.trip_departure_date), departureDate, onDepartureDateChange) { datePickerTarget = "departure" }
+                if (!oneWay) DateField(stringResource(R.string.trip_return_date), returnDate, onReturnDateChange) { datePickerTarget = "return" }
                 ReminderControl(reminderEnabled, reminderSummary, onOpenReminderPicker, onReminderDisabled)
             }
             Footer(onBack, onNextStep, oneWay)
         }
+        if (showTicketSheet) LoadTicketSheet { showTicketSheet = false }
+        if (datePickerTarget != null) TripDatePickerSheet(
+            title = if (datePickerTarget == "departure") stringResource(R.string.trip_departure_date) else stringResource(R.string.trip_return_date),
+            onDismiss = { datePickerTarget = null },
+            onSave = {
+                if (datePickerTarget == "departure") onDepartureDateChange("2024-06-09") else onReturnDateChange("2024-06-09")
+                datePickerTarget = null
+            }
+        )
     }
 }
 
@@ -164,7 +182,7 @@ private fun Choice(label: String, selected: Boolean, modifier: Modifier, onClick
 }
 
 @Composable
-private fun DateField(label: String, value: String, onChange: (String) -> Unit) {
+private fun DateField(label: String, value: String, onChange: (String) -> Unit, onOpenPicker: () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(label, color = Color(0xFF002349), fontSize = 16.sp, lineHeight = 24.sp)
         Row(
@@ -176,7 +194,7 @@ private fun DateField(label: String, value: String, onChange: (String) -> Unit) 
                 textStyle = androidx.compose.ui.text.TextStyle(color = Color(0xFF8D919A), fontSize = 16.sp, lineHeight = 24.sp),
                 decorationBox = { inner -> if (value.isEmpty()) Text("25.03.2024", color = Color(0xFF8D919A), fontSize = 16.sp) else inner() }
             )
-            Image(painterResource(R.drawable.c2g_events), null, colorFilter = ColorFilter.tint(Color(0xFF8D919A)), modifier = Modifier.size(24.dp))
+            Image(painterResource(R.drawable.c2g_events), label, colorFilter = ColorFilter.tint(Color(0xFF8D919A)), modifier = Modifier.size(24.dp).clickable(onClick = onOpenPicker).testTag(if (label.contains("Departure")) "departure_date_picker" else "return_date_picker"))
         }
     }
 }
@@ -229,6 +247,61 @@ private fun Footer(onBack: () -> Unit, onNext: () -> Unit, oneWay: Boolean) {
 private fun FooterButton(label: String, primary: Boolean, modifier: Modifier, onClick: () -> Unit) {
     Box(modifier.height(50.dp).clip(RoundedCornerShape(12.dp)).background(if (primary) Color(0xFF043CB3) else Color(0xFFEDF2F8)).clickable(onClick = onClick), contentAlignment = Alignment.Center) {
         Text(label, color = Color(0xFF043CB3).takeUnless { primary } ?: Color.White, fontSize = 18.sp, fontWeight = FontWeight.Medium)
+    }
+}
+
+@Composable
+private fun LoadTicketSheet(onDismiss: () -> Unit) {
+    Box(Modifier.fillMaxSize().background(Color(0x99000000))) {
+        Box(Modifier.fillMaxSize().clickable(onClick = onDismiss))
+        Column(
+            Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(467.dp)
+                .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)).background(Color.White)
+                .navigationBarsPadding().padding(16.dp)
+        ) {
+            Text("Load your ticket", Modifier.fillMaxWidth(), color = Color(0xFF002349), fontSize = 20.sp, fontWeight = FontWeight.SemiBold, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+            Spacer(Modifier.height(25.dp)); TicketSheetAction("▧", "Choose from gallery")
+            Spacer(Modifier.height(18.dp)); TicketSheetAction("⇥", "Choose from files")
+            Text("Recently downloaded:", Modifier.padding(top = 32.dp, bottom = 8.dp), color = Color(0xFF8D919A), fontSize = 16.sp)
+            listOf("Ticket 1. Moscow–Tel Aviv.pdf", "image_2024-0... Moscow-Tel Aviv.png", "Ticket 1. Moscow–Tel Aviv.pdf", "Ticket 1. Moscow–Tel Aviv.pdf").forEach {
+                Row(Modifier.fillMaxWidth().height(48.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Image(painterResource(R.drawable.c2g_upload_document), null, Modifier.size(44.dp).clip(RoundedCornerShape(4.dp)), colorFilter = ColorFilter.tint(Color(0xFF8D919A)))
+                    Column(Modifier.padding(start = 12.dp)) { Text(it, color = Color(0xFF002349), fontSize = 15.sp); Text("1MB", color = Color(0xFF8D919A), fontSize = 15.sp) }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TicketSheetAction(icon: String, label: String) {
+    Row(verticalAlignment = Alignment.CenterVertically) { Text(icon, Modifier.width(32.dp), color = Color(0xFF002349), fontSize = 21.sp); Text(label, color = Color(0xFF002349), fontSize = 17.sp) }
+}
+
+@Composable
+private fun TripDatePickerSheet(title: String, onDismiss: () -> Unit, onSave: () -> Unit) {
+    Box(Modifier.fillMaxSize().background(Color(0x99000000))) {
+        Box(Modifier.fillMaxSize().clickable(onClick = onDismiss))
+        Column(
+            Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(546.dp)
+                .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)).background(Color.White)
+                .navigationBarsPadding().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(title, color = Color(0xFF002349), fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
+            Spacer(Modifier.height(20.dp))
+            Column(Modifier.fillMaxWidth().height(314.dp).clip(RoundedCornerShape(12.dp)).background(Color(0xFFFCFCFD))) {
+                Row(Modifier.fillMaxWidth().height(34.dp).background(Color(0xFFF8F8F9)), verticalAlignment = Alignment.CenterVertically) {
+                    listOf("SUN","MON","TUE","WED","THU","FRI","SAT").forEach { Text(it, Modifier.weight(1f), color = Color(0xFFC3C4C7), fontSize = 13.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center) }
+                }
+                Row(Modifier.fillMaxWidth().height(56.dp).padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text("June 2024", color = Color(0xFF002349), fontSize = 18.sp, fontWeight = FontWeight.SemiBold); Text("  ›", color = Color(0xFF043CB3), fontSize = 24.sp); Spacer(Modifier.weight(1f)); Text("‹    ›", color = Color(0xFF043CB3), fontSize = 24.sp)
+                }
+                val weeks = listOf(listOf<Int?>(null,null,null,null,null,null,1), listOf(2,3,4,5,6,7,8), listOf(9,10,11,12,13,14,15), listOf(16,17,18,19,20,21,22), listOf(23,24,25,26,27,28,29), listOf(30,null,null,null,null,null,null))
+                weeks.forEach { week -> Row(Modifier.fillMaxWidth().weight(1f)) { week.forEach { day -> Box(Modifier.weight(1f).fillMaxHeight().background(if (day == 9) Color(0xFF043CB3) else Color.Transparent), contentAlignment = Alignment.Center) { if (day != null) Text(day.toString(), color = if (day == 9) Color.White else Color(0xFF002349), fontSize = 16.sp) } } } }
+            }
+            Text("Fri, 9 June", Modifier.padding(top = 24.dp), color = Color(0xFF043CB3), fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+            Box(Modifier.padding(top = 24.dp).fillMaxWidth().height(50.dp).clip(RoundedCornerShape(10.dp)).background(Color(0xFF043CB3)).clickable(onClick = onSave).testTag("save_trip_date"), contentAlignment = Alignment.Center) { Text("Save date", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.SemiBold) }
+        }
     }
 }
 

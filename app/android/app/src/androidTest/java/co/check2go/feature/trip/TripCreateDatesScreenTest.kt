@@ -22,6 +22,28 @@ class TripCreateDatesScreenTest {
     val composeRule = createComposeRule()
 
     @Test
+    fun loadTicketOpensApprovedSheet() {
+        composeRule.setContent { Check2GoTheme { TripCreateDatesScreen(false, {}, "", {}, "", {}, false, null, {}, {}, {}, {}, {}) } }
+        composeRule.onNodeWithText("Load your ticket").performClick()
+        composeRule.onNodeWithText("Choose from gallery").assertIsDisplayed()
+        composeRule.onNodeWithText("Recently downloaded:").assertIsDisplayed()
+    }
+
+    @Test
+    fun departureCalendarSavesSelectedDate() {
+        var departure = ""
+        composeRule.setContent {
+            Check2GoTheme {
+                TripCreateDatesScreen(false, {}, departure, { departure = it }, "", {}, false, null, {}, {}, {}, {}, {})
+            }
+        }
+        composeRule.onNodeWithTag("departure_date_picker").performClick()
+        composeRule.onNodeWithText("Fri, 9 June").assertIsDisplayed()
+        composeRule.onNodeWithTag("save_trip_date").performClick()
+        composeRule.onNodeWithText("2024-06-09").assertIsDisplayed()
+    }
+
+    @Test
     fun returnDateVisibleByDefaultAndHiddenWhenOneWay() {
         composeRule.setContent {
             Check2GoTheme {
