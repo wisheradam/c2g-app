@@ -6,11 +6,17 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.Icon
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.Checklist
+import androidx.compose.material.icons.outlined.Description
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import co.check2go.R
 
 /** Bottom navigation destinations shared by every main-tab screen (HOME_EMPTY/HOME_TRIPS, CHECKLISTS_EMPTY). */
@@ -20,6 +26,14 @@ enum class AppDestination(@StringRes val labelRes: Int) {
     Checklists(R.string.nav_checklists),
     Events(R.string.nav_events)
 }
+
+private val AppDestination.icon: ImageVector
+    get() = when (this) {
+        AppDestination.Home -> Icons.Outlined.Home
+        AppDestination.Documents -> Icons.Outlined.Description
+        AppDestination.Checklists -> Icons.Outlined.Checklist
+        AppDestination.Events -> Icons.Outlined.CalendarMonth
+    }
 
 /**
  * Shared bottom navigation bar across main-tab screens. [selected] must reflect the caller's
@@ -39,8 +53,7 @@ internal fun AppNavigationBar(
                 selected = destination == selected,
                 onClick = { onDestinationSelected(destination) },
                 icon = {
-                    // Temporary glyph until the exact tab icon set is recovered from design assets.
-                    Text(text = label.take(1), fontWeight = FontWeight.SemiBold)
+                    Icon(imageVector = destination.icon, contentDescription = null)
                 },
                 label = { Text(text = label) },
                 colors = NavigationBarItemDefaults.colors(

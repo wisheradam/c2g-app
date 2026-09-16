@@ -1,29 +1,26 @@
 package co.check2go.feature.home
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.EmojiEvents
+import androidx.compose.material.icons.outlined.HelpOutline
+import androidx.compose.material.icons.outlined.NotificationsNone
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -31,21 +28,15 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import co.check2go.R
 import co.check2go.core.design.AppDestination
 import co.check2go.core.design.AppNavigationBar
 import co.check2go.ui.theme.Check2GoTheme
 
-/**
- * Shared screen ID: HOME_EMPTY.
- *
- * Navigation and business behavior are supplied by the caller so this composable remains a
- * stateless representation of the verified empty Home state.
- */
-@OptIn(ExperimentalMaterial3Api::class)
+/** Approved Figma HOME_EMPTY frame 1:28510. */
 @Composable
 fun HomeEmptyScreen(
     onAddTrip: () -> Unit,
@@ -53,120 +44,80 @@ fun HomeEmptyScreen(
     onDestinationSelected: (AppDestination) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val secondary = Color(0xFF8D919A)
     val quickAddLabel = stringResource(R.string.home_quick_add)
 
-    Scaffold(
-        modifier = modifier.fillMaxSize(),
-        containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            TopAppBar(
-                title = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Image(
-                            painter = painterResource(R.drawable.ic_check2go_mark),
-                            contentDescription = stringResource(R.string.app_logo_content_description),
-                            modifier = Modifier.size(28.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = stringResource(R.string.app_name),
-                            fontWeight = FontWeight.SemiBold
-                        )
+    Box(modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        Column(Modifier.fillMaxSize()) {
+            Row(
+                modifier = Modifier.fillMaxWidth().height(98.dp).background(Color.White)
+                    .statusBarsPadding().padding(horizontal = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(Icons.Outlined.EmojiEvents, contentDescription = null, tint = secondary, modifier = Modifier.size(24.dp))
+                Spacer(Modifier.weight(1f))
+                Text(stringResource(R.string.app_name), color = Color(0xFF002349), fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+                Spacer(Modifier.weight(1f))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Outlined.Settings, contentDescription = null, tint = secondary, modifier = Modifier.size(24.dp))
+                    Spacer(Modifier.width(12.dp))
+                    Icon(Icons.Outlined.HelpOutline, contentDescription = null, tint = secondary, modifier = Modifier.size(24.dp))
+                    Spacer(Modifier.width(12.dp))
+                    Box {
+                        Icon(Icons.Outlined.NotificationsNone, contentDescription = null, tint = secondary, modifier = Modifier.size(24.dp))
+                        Box(Modifier.align(Alignment.TopEnd).size(5.dp).background(Color(0xFFC45777), CircleShape))
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    titleContentColor = MaterialTheme.colorScheme.onBackground
-                )
-            )
-        },
-        bottomBar = {
-            AppNavigationBar(selected = AppDestination.Home, onDestinationSelected = onDestinationSelected)
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = onQuickAdd,
-                shape = CircleShape,
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-                modifier = Modifier.semantics {
-                    contentDescription = quickAddLabel
-                    role = Role.Button
                 }
+            }
+
+            Box(
+                Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp).fillMaxWidth().height(183.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Brush.horizontalGradient(listOf(Color(0xFF4F88BC), Color(0xFF58C5EC))))
             ) {
-                Text(
-                    text = "+",
-                    style = MaterialTheme.typography.headlineMedium
+                Box(Modifier.align(Alignment.TopEnd).offset(x = 57.dp, y = 20.dp).size(222.dp)
+                    .background(Color(0xFFF4F7FA).copy(alpha = .28f), CircleShape))
+                Image(
+                    painterResource(R.drawable.home_suitcase), null, contentScale = ContentScale.Fit,
+                    modifier = Modifier.align(Alignment.TopEnd).offset(x = 22.dp, y = 31.dp).size(178.dp)
                 )
+                Image(
+                    painterResource(R.drawable.home_hat), null, contentScale = ContentScale.Fit,
+                    modifier = Modifier.align(Alignment.TopEnd).offset(x = 7.dp, y = 26.dp).size(102.dp)
+                )
+                Text(
+                    stringResource(R.string.home_hero_title), Modifier.padding(start = 16.dp, top = 16.dp).width(207.dp),
+                    color = Color.White, fontSize = 22.sp, lineHeight = 26.sp, fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    stringResource(R.string.home_supporting_copy), Modifier.padding(start = 16.dp, top = 74.dp).width(207.dp),
+                    color = Color.White, fontSize = 14.sp, lineHeight = 18.sp
+                )
+                Box(
+                    Modifier.align(Alignment.BottomCenter).padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
+                        .fillMaxWidth().height(42.dp).clip(RoundedCornerShape(12.dp)).background(Color.White)
+                        .clickable(role = Role.Button, onClick = onAddTrip),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(stringResource(R.string.home_add_trip), color = Color(0xFF002349), fontSize = 16.sp, lineHeight = 24.sp, fontWeight = FontWeight.Medium)
+                }
             }
+            Spacer(Modifier.weight(1f))
+            AppNavigationBar(AppDestination.Home, onDestinationSelected)
         }
-    ) { contentPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(contentPadding)
-                .padding(horizontal = 24.dp, vertical = 32.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            IllustrationPlaceholder()
-            Text(
-                text = stringResource(R.string.home_hero_title),
-                modifier = Modifier.padding(top = 32.dp),
-                color = MaterialTheme.colorScheme.onBackground,
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.SemiBold,
-                textAlign = TextAlign.Center
-            )
-            Text(
-                text = stringResource(R.string.home_supporting_copy),
-                modifier = Modifier.padding(top = 12.dp),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodyLarge,
-                textAlign = TextAlign.Center
-            )
-            Button(
-                onClick = onAddTrip,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 32.dp)
-            ) {
-                Text(text = stringResource(R.string.home_add_trip))
-            }
-        }
+
+        Box(
+            Modifier.align(Alignment.BottomEnd).navigationBarsPadding().padding(end = 8.dp, bottom = 74.dp)
+                .size(56.dp).background(MaterialTheme.colorScheme.primary, CircleShape)
+                .semantics { contentDescription = quickAddLabel; role = Role.Button }
+                .clickable(onClick = onQuickAdd),
+            contentAlignment = Alignment.Center
+        ) { Text("+", color = Color.White, fontSize = 30.sp, fontWeight = FontWeight.Light) }
     }
 }
 
-@Composable
-private fun IllustrationPlaceholder() {
-    Box(
-        modifier = Modifier
-            .size(width = 208.dp, height = 144.dp)
-            .border(width = 1.dp, color = MaterialTheme.colorScheme.onSurfaceVariant),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = stringResource(R.string.home_illustration_placeholder),
-            modifier = Modifier.padding(16.dp),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.labelLarge,
-            textAlign = TextAlign.Center
-        )
-    }
-}
-
-@Preview(showBackground = true)
+@Preview(showBackground = true, widthDp = 393, heightDp = 852)
 @Composable
 private fun HomeEmptyLightPreview() {
-    Check2GoTheme(darkTheme = false) {
-        HomeEmptyScreen({}, {}, {})
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun HomeEmptyDarkPreview() {
-    Check2GoTheme(darkTheme = true) {
-        HomeEmptyScreen({}, {}, {})
-    }
+    Check2GoTheme(darkTheme = false) { HomeEmptyScreen({}, {}, {}) }
 }
