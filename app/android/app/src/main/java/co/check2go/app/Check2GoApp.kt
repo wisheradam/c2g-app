@@ -33,6 +33,7 @@ import co.check2go.feature.checklists.withItemSectionChanged
 import co.check2go.feature.checklists.withSectionAdded
 import co.check2go.feature.checklists.withSectionRemoved
 import co.check2go.feature.checklists.withSectionRenamed
+import co.check2go.feature.checklists.ShareChecklistScreen
 import co.check2go.feature.home.HomeEmptyScreen
 import co.check2go.feature.home.MyTripsScreen
 import co.check2go.feature.trip.CompletedTrip
@@ -56,6 +57,7 @@ private enum class AppScreen {
     ChecklistDetail,
     ChecklistEdit,
     ChecklistDuplicateConfirmation,
+    ShareChecklist,
     TripDestination,
     TripDates,
     ReminderPicker,
@@ -346,8 +348,15 @@ fun Check2GoApp(
                     screen = AppScreen.ChecklistEdit
                 },
                 onDuplicateChecklist = { duplicateChecklist(selectedChecklist, AppScreen.ChecklistDetail) },
-                onBack = navigateToChecklists
+                onBack = navigateToChecklists,
+                onShareChecklist = { screen = AppScreen.ShareChecklist }
             )
+        }
+
+        AppScreen.ShareChecklist -> {
+            val back = { screen = AppScreen.ChecklistDetail }
+            BackHandler(onBack = back)
+            ShareChecklistScreen(onBack = back, onFindOutMore = back)
         }
 
         AppScreen.ChecklistEdit -> {
