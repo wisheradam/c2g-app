@@ -1,47 +1,37 @@
 package co.check2go.feature.trip
 
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import co.check2go.R
 import co.check2go.ui.theme.Check2GoTheme
 
-/** Whether the trip is being planned solo or with a group of travelers. */
 enum class TripAdventureType { Solo, Group }
 
-/** Draft captured by the shared TRIP_CREATE_TRAVELERS screen. */
-data class TripTravelersDraft(
-    val adventureType: TripAdventureType,
-    val petsIncluded: Boolean
-)
+data class TripTravelersDraft(val adventureType: TripAdventureType, val petsIncluded: Boolean)
 
-/** Stateless representation of the shared TRIP_CREATE_TRAVELERS screen. */
-@OptIn(ExperimentalMaterial3Api::class)
+/** Approved Figma traveler states 1:29178, 1:29204, 1:29236 and 1:29269. */
 @Composable
 fun TripCreateTravelersScreen(
     adventureType: TripAdventureType,
@@ -53,157 +43,112 @@ fun TripCreateTravelersScreen(
     onComplete: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Scaffold(
-        modifier = modifier.fillMaxSize(),
-        containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            TopAppBar(
-                title = { Text(text = stringResource(R.string.app_name)) },
-                navigationIcon = {
-                    TextButton(onClick = onBack) {
-                        Text(text = stringResource(R.string.trip_back))
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    navigationIconContentColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onBackground
-                )
-            )
-        }
-    ) { contentPadding ->
+    Column(modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        TravelersHeader(onBack)
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(contentPadding)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp, vertical = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(start = 16.dp, end = 16.dp, top = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(22.dp)
         ) {
-            TripCreateStepIndicator(currentStep = 3)
-            Text(
-                text = stringResource(R.string.trip_create_travelers_title),
-                modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.colorScheme.onBackground,
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.SemiBold,
-                textAlign = TextAlign.Center
-            )
-            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                SegmentedButton(
-                    selected = adventureType == TripAdventureType.Solo,
-                    onClick = { onAdventureTypeChange(TripAdventureType.Solo) },
-                    shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
-                ) {
-                    Text(text = stringResource(R.string.trip_solo_adventure))
-                }
-                SegmentedButton(
-                    selected = adventureType == TripAdventureType.Group,
-                    onClick = { onAdventureTypeChange(TripAdventureType.Group) },
-                    shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
-                ) {
-                    Text(text = stringResource(R.string.trip_group_adventure))
+            TravelersHero()
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(stringResource(R.string.trip_create_travelers_title), color = Color(0xFF002349), fontSize = 16.sp)
+                Row(Modifier.fillMaxWidth().height(42.dp).clip(RoundedCornerShape(9.dp)).background(Color.White).padding(3.dp)) {
+                    AdventureChoice(stringResource(R.string.trip_solo_adventure), adventureType == TripAdventureType.Solo, Modifier.weight(1f)) { onAdventureTypeChange(TripAdventureType.Solo) }
+                    AdventureChoice(stringResource(R.string.trip_group_adventure), adventureType == TripAdventureType.Group, Modifier.weight(1f)) { onAdventureTypeChange(TripAdventureType.Group) }
                 }
             }
-            if (adventureType == TripAdventureType.Group) {
-                MyTravelersPanel(onAddTraveler = onAddTraveler)
-            }
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Text(
-                    text = stringResource(R.string.trip_pets_label),
-                    color = MaterialTheme.colorScheme.onBackground,
-                    style = MaterialTheme.typography.titleSmall
-                )
-                SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                    SegmentedButton(
-                        selected = !petsIncluded,
-                        onClick = { onPetsIncludedChange(false) },
-                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
-                    ) {
-                        Text(text = stringResource(R.string.trip_pets_no))
-                    }
-                    SegmentedButton(
-                        selected = petsIncluded,
-                        onClick = { onPetsIncludedChange(true) },
-                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
-                    ) {
-                        Text(text = stringResource(R.string.trip_pets_yes))
-                    }
-                }
-            }
-            Button(
-                onClick = onComplete,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp)
-            ) {
-                Text(text = stringResource(R.string.trip_complete))
+            if (adventureType == TripAdventureType.Group) MyTravelersPanel(onAddTraveler)
+            PetsChoice(petsIncluded, onPetsIncludedChange)
+        }
+        TravelersFooter(onBack, onComplete)
+    }
+}
+
+@Composable
+private fun TravelersHeader(onBack: () -> Unit) {
+    val secondary = Color(0xFF8D919A)
+    Row(Modifier.fillMaxWidth().height(98.dp).background(Color.White).statusBarsPadding().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+        Image(painterResource(R.drawable.c2g_arrow_left), stringResource(R.string.trip_back), colorFilter = ColorFilter.tint(secondary), modifier = Modifier.size(24.dp).clickable(onClick = onBack))
+        Spacer(Modifier.weight(1f)); Text("Add a trip", color = Color(0xFF002349), fontSize = 18.sp, fontWeight = FontWeight.SemiBold); Spacer(Modifier.weight(1f))
+        SmallHeaderIcon(R.drawable.c2g_settings, secondary); Spacer(Modifier.width(10.dp)); SmallHeaderIcon(R.drawable.c2g_help, secondary); Spacer(Modifier.width(10.dp)); SmallHeaderIcon(R.drawable.c2g_notification, secondary)
+    }
+}
+
+@Composable private fun SmallHeaderIcon(id: Int, tint: Color) = Image(painterResource(id), null, colorFilter = ColorFilter.tint(tint), modifier = Modifier.size(24.dp))
+
+@Composable
+private fun TravelersHero() {
+    Box(Modifier.fillMaxWidth().height(89.dp).clip(RoundedCornerShape(12.dp))) {
+        Image(painterResource(R.drawable.trip_travelers), null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+        Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(listOf(Color.Black.copy(.55f), Color.Transparent))))
+        Column(Modifier.align(Alignment.CenterStart).padding(start = 16.dp)) {
+            Text("Step 2/2", color = Color(0xFFF4F7FA), fontSize = 22.sp, lineHeight = 26.sp, fontWeight = FontWeight.SemiBold)
+            Text("Travelers", color = Color(0xFFF4F7FA).copy(.8f), fontSize = 16.sp, lineHeight = 24.sp)
+        }
+    }
+}
+
+@Composable
+private fun AdventureChoice(label: String, selected: Boolean, modifier: Modifier, onClick: () -> Unit) {
+    Box(modifier.fillMaxHeight().clip(RoundedCornerShape(7.dp)).background(if (selected) Color(0xFF043CB3) else Color.Transparent).clickable(onClick = onClick), contentAlignment = Alignment.Center) {
+        Text(label, color = if (selected) Color.White else Color(0xFF002349), fontSize = 14.sp)
+    }
+}
+
+@Composable
+private fun MyTravelersPanel(onAddTraveler: () -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(stringResource(R.string.trip_my_travelers_title), color = Color(0xFF002349), fontSize = 16.sp)
+        Box(
+            Modifier.fillMaxWidth().height(44.dp).clip(RoundedCornerShape(10.dp)).background(Color(0xFFEDF2F8)).clickable(onClick = onAddTraveler),
+            contentAlignment = Alignment.Center
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("＋", color = Color(0xFF043CB3), fontSize = 20.sp)
+                Spacer(Modifier.width(6.dp))
+                Text(stringResource(R.string.trip_add_traveler), color = Color(0xFF043CB3), fontSize = 16.sp)
             }
         }
     }
 }
 
-/**
- * Clearly temporary group-mode panel. No traveler editing, profile persistence, fake
- * profiles or backend are wired up yet; this only exposes the entry point for it.
- */
 @Composable
-private fun MyTravelersPanel(onAddTraveler: () -> Unit, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .border(1.dp, MaterialTheme.colorScheme.onSurfaceVariant)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Text(
-            text = stringResource(R.string.trip_my_travelers_title),
-            color = MaterialTheme.colorScheme.onBackground,
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.SemiBold
-        )
-        Text(
-            text = stringResource(R.string.trip_my_travelers_placeholder),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.bodySmall
-        )
-        OutlinedButton(onClick = onAddTraveler, modifier = Modifier.fillMaxWidth()) {
-            Text(text = stringResource(R.string.trip_add_traveler))
+private fun PetsChoice(included: Boolean, onChange: (Boolean) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text(stringResource(R.string.trip_pets_label), color = Color(0xFF202427), fontSize = 16.sp)
+        Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+            RadioChoice(stringResource(R.string.trip_pets_yes), included) { onChange(true) }
+            RadioChoice(stringResource(R.string.trip_pets_no), !included) { onChange(false) }
         }
     }
 }
 
-@Preview(showBackground = true)
 @Composable
-private fun TripCreateTravelersSoloPreview() {
-    Check2GoTheme(darkTheme = false) {
-        TripCreateTravelersScreen(
-            adventureType = TripAdventureType.Solo,
-            onAdventureTypeChange = {},
-            petsIncluded = false,
-            onPetsIncludedChange = {},
-            onAddTraveler = {},
-            onBack = {},
-            onComplete = {}
-        )
+private fun RadioChoice(label: String, selected: Boolean, onClick: () -> Unit) {
+    Row(Modifier.clickable(onClick = onClick), verticalAlignment = Alignment.CenterVertically) {
+        Box(Modifier.size(22.dp).background(Color.White, CircleShape).padding(3.dp).then(if (selected) Modifier.background(Color(0xFFC14471), CircleShape) else Modifier))
+        Spacer(Modifier.width(8.dp)); Text(label, color = Color(0xFF002349), fontSize = 16.sp)
     }
 }
 
-@Preview(showBackground = true)
 @Composable
-private fun TripCreateTravelersGroupPreview() {
-    Check2GoTheme(darkTheme = true) {
-        TripCreateTravelersScreen(
-            adventureType = TripAdventureType.Group,
-            onAdventureTypeChange = {},
-            petsIncluded = true,
-            onPetsIncludedChange = {},
-            onAddTraveler = {},
-            onBack = {},
-            onComplete = {}
-        )
+private fun TravelersFooter(onBack: () -> Unit, onComplete: () -> Unit) {
+    Column(Modifier.fillMaxWidth().background(Color.White).navigationBarsPadding()) {
+        Box(Modifier.fillMaxWidth().height(4.dp).background(Color(0xFF20D463)))
+        Text("Step 2/2. Travelers", Modifier.fillMaxWidth().padding(vertical = 5.dp), color = Color(0xFF8D919A), fontSize = 14.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+        Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            TravelerFooterButton(stringResource(R.string.trip_back), false, Modifier.weight(1f), onBack)
+            TravelerFooterButton(stringResource(R.string.trip_complete), true, Modifier.weight(1f), onComplete)
+        }
     }
 }
+
+@Composable
+private fun TravelerFooterButton(label: String, primary: Boolean, modifier: Modifier, onClick: () -> Unit) {
+    Box(modifier.height(50.dp).clip(RoundedCornerShape(12.dp)).background(if (primary) Color(0xFF043CB3) else Color(0xFFEDF2F8)).clickable(onClick = onClick), contentAlignment = Alignment.Center) {
+        Text(label, color = if (primary) Color.White else Color(0xFF043CB3), fontSize = 18.sp, fontWeight = FontWeight.Medium)
+    }
+}
+
+@Preview(showBackground = true, widthDp = 393, heightDp = 852)
+@Composable private fun TravelersPreview() = Check2GoTheme(false) { TripCreateTravelersScreen(TripAdventureType.Group, {}, false, {}, {}, {}, {}) }
