@@ -47,6 +47,7 @@ import co.check2go.feature.trip.TripDatesDraft
 import co.check2go.feature.trip.TripDestinationDraft
 import co.check2go.feature.trip.TripFilter
 import co.check2go.feature.trip.TripTravelersDraft
+import co.check2go.feature.trip.TripHubScreen
 import co.check2go.feature.trip.MyTravelersScreen
 import co.check2go.feature.trip.TravelerEditorScreen
 
@@ -63,7 +64,8 @@ private enum class AppScreen {
     ReminderPicker,
     TripTravelers,
     MyTravelers,
-    TravelerEditor
+    TravelerEditor,
+    TripHub
 }
 
 /**
@@ -109,6 +111,7 @@ fun Check2GoApp(
         mutableStateOf(emptyList<CompletedTrip>())
     }
     var nextTripId by rememberSaveable { mutableStateOf(1L) }
+    var selectedTripId by rememberSaveable { mutableStateOf<Long?>(null) }
     var tripFilter by rememberSaveable { mutableStateOf(TripFilter.Active) }
 
     // CHECKLIST_CREATE draft: hoisted here (rather than local to the screen) so Back navigating
@@ -218,9 +221,23 @@ fun Check2GoApp(
                     onFilterChange = { tripFilter = it },
                     onAddTrip = startNewTripDraft,
                     onQuickAdd = startNewTripDraft,
-                    onDestinationSelected = onAppDestinationSelected
+                    onDestinationSelected = onAppDestinationSelected,
+                    onTripSelected = {
+                        selectedTripId = it
+                        screen = AppScreen.TripHub
+                    }
                 )
             }
+        }
+
+        AppScreen.TripHub -> {
+            val back = { screen = AppScreen.Home }
+            BackHandler(onBack = back)
+            TripHubScreen(
+                trip = trips.first { it.id == selectedTripId },
+                onBack = back,
+                onCreateChecklist = { screen = AppScreen.ChecklistCreate }
+            )
         }
 
         AppScreen.Checklists -> {
