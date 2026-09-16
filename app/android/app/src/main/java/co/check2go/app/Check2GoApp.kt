@@ -37,6 +37,7 @@ import co.check2go.feature.home.HomeEmptyScreen
 import co.check2go.feature.home.MyTripsScreen
 import co.check2go.feature.trip.CompletedTrip
 import co.check2go.feature.trip.CompletedTripListSaver
+import co.check2go.feature.trip.ReminderPickerScreen
 import co.check2go.feature.trip.TripAdventureType
 import co.check2go.feature.trip.TripCreateDatesScreen
 import co.check2go.feature.trip.TripCreateDestinationScreen
@@ -55,6 +56,7 @@ private enum class AppScreen {
     ChecklistDuplicateConfirmation,
     TripDestination,
     TripDates,
+    ReminderPicker,
     TripTravelers
 }
 
@@ -63,7 +65,7 @@ private enum class AppScreen {
  * <-> CHECKLIST_CREATE, CHECKLISTS_POPULATED -> CHECKLIST_DETAIL <-> CHECKLIST_EDIT, CHECKLIST_DETAIL
  * / CHECKLIST_EDIT -> CHECKLIST_DUPLICATE_CONFIRMATION -> (back to that same context, or into the
  * duplicate's own CHECKLIST_DETAIL), and HOME_EMPTY/HOME_TRIPS -> TRIP_CREATE_DESTINATION ->
- * TRIP_CREATE_DATES -> TRIP_CREATE_TRAVELERS.
+ * TRIP_CREATE_DATES <-> REMINDER_PICKER -> TRIP_CREATE_TRAVELERS.
  *
  * [onChecklistCreated] mirrors [onTripCreateComplete]: an app-level hook fired once CHECKLIST_CREATE
  * "Save changes" (Flow 7, step 7) succeeds, receiving the full structured draft.
@@ -83,6 +85,15 @@ fun Check2GoApp(
     var departureDate by rememberSaveable { mutableStateOf("") }
     var returnDate by rememberSaveable { mutableStateOf("") }
     var reminderEnabled by rememberSaveable { mutableStateOf(false) }
+    // Last REMINDER_PICKER value confirmed via "Set a reminder" (docs/flows.md Flow 10). Preserved
+    // even after reminderEnabled is turned off, so re-enabling the reminder pre-fills it again.
+    var reminderDate by rememberSaveable { mutableStateOf("") }
+    var reminderTime by rememberSaveable { mutableStateOf("") }
+    // REMINDER_PICKER's own in-progress input: seeded from reminderDate/reminderTime when the
+    // picker opens, and only written back to them by "Set a reminder" -- Back/system-back discards
+    // this instead (Flow 10: editing must not affect the confirmed reminder until confirmed).
+    var reminderPickerDate by rememberSaveable { mutableStateOf("") }
+    var reminderPickerTime by rememberSaveable { mutableStateOf("") }
 
     var adventureType by rememberSaveable { mutableStateOf(TripAdventureType.Solo) }
     var petsIncluded by rememberSaveable { mutableStateOf(false) }
@@ -145,6 +156,10 @@ fun Check2GoApp(
         departureDate = ""
         returnDate = ""
         reminderEnabled = false
+        reminderDate = ""
+        reminderTime = ""
+        reminderPickerDate = ""
+        reminderPickerTime = ""
         adventureType = TripAdventureType.Solo
         petsIncluded = false
     }
@@ -457,10 +472,47 @@ fun Check2GoApp(
                 returnDate = returnDate,
                 onReturnDateChange = { returnDate = it },
                 reminderEnabled = reminderEnabled,
-                onReminderEnabledChange = { reminderEnabled = it },
+                reminderSummary = if (reminderEnabled) {
+                    stringResource(R.string.trip_reminder_summary_format, reminderDate, reminderTime)
+                } else {
+                    null
+                },
+                onOpenReminderPicker = {
+                    // Seed REMINDER_PICKER from the last confirmed value (blank if none yet), so
+                    // both "turn on for the first time" and "edit an existing reminder" pre-fill
+                    // consistently (docs/flows.md Flow 10).
+                    reminderPickerDate = reminderDate
+                    reminderPickerTime = reminderTime
+                    screen = AppScreen.ReminderPicker
+                },
+                // Turning the control off disables the reminder immediately -- no REMINDER_PICKER
+                // round trip needed, and reminderDate/reminderTime are left untouched so turning it
+                // back on (or reopening the picker) still pre-fills the same values.
+                onReminderDisabled = { reminderEnabled = false },
                 onLoadTicket = {},
                 onBack = navigateToDestination,
                 onNextStep = { screen = AppScreen.TripTravelers }
+            )
+        }
+
+        AppScreen.ReminderPicker -> {
+            val navigateToDates = { screen = AppScreen.TripDates }
+            // Back discards unsaved edits (Flow 10): reminderPickerDate/Time are never written back
+            // to reminderDate/reminderTime/reminderEnabled except by onConfirm below, so the trip
+            // draft (including any previously confirmed reminder) is untouched.
+            BackHandler(onBack = navigateToDates)
+            ReminderPickerScreen(
+                date = reminderPickerDate,
+                onDateChange = { reminderPickerDate = it },
+                time = reminderPickerTime,
+                onTimeChange = { reminderPickerTime = it },
+                onBack = navigateToDates,
+                onConfirm = {
+                    reminderDate = reminderPickerDate
+                    reminderTime = reminderPickerTime
+                    reminderEnabled = true
+                    screen = AppScreen.TripDates
+                }
             )
         }
 
@@ -484,7 +536,9 @@ fun Check2GoApp(
                         oneWay = oneWay,
                         departureDate = departureDate,
                         returnDate = returnDate,
-                        reminderEnabled = reminderEnabled
+                        reminderEnabled = reminderEnabled,
+                        reminderDate = reminderDate,
+                        reminderTime = reminderTime
                     )
                     val travelersDraft = TripTravelersDraft(
                         adventureType = adventureType,

@@ -38,7 +38,17 @@
     <!-- Temporary: calendar picker screen (TRIP_CREATE_DATES date picker sheet) is out of scope for this task. -->
     <string name="trip_date_field_helper">Enter the date manually. A calendar picker is not available yet.</string>
     <string name="trip_reminder_label">Travel reminder</string>
+    <string name="trip_reminder_summary_format">Reminder: %1$s at %2$s</string>
+    <string name="trip_reminder_edit">Edit</string>
     <string name="trip_next_step">Next step</string>
+    <string name="reminder_picker_title">Set a reminder</string>
+    <string name="reminder_date_label">Reminder date</string>
+    <string name="reminder_time_label">Reminder time</string>
+    <string name="reminder_time_placeholder">HH:mm</string>
+    <!-- Temporary: calendar/time picker (docs/screen-inventory.md "Reminder / Date-Time Picker") is
+         not available yet, so date and time are entered manually. -->
+    <string name="reminder_field_helper">Enter the date and time manually. A calendar/time picker is not available yet.</string>
+    <string name="reminder_set_action">Set a reminder</string>
     <string name="trip_create_travelers_title">Travelers</string>
     <string name="trip_solo_adventure">Solo adventure</string>
     <string name="trip_group_adventure">Group adventure</string>

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -27,7 +28,9 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -37,12 +40,19 @@ import androidx.compose.ui.unit.dp
 import co.check2go.R
 import co.check2go.ui.theme.Check2GoTheme
 
-/** Draft captured by the shared TRIP_CREATE_DATES screen. */
+/**
+ * Draft captured by the shared TRIP_CREATE_DATES screen. [reminderDate]/[reminderTime] hold the
+ * last REMINDER_PICKER value confirmed via "Set a reminder" (docs/flows.md Flow 10); they are
+ * meaningful only while [reminderEnabled] is true, but are preserved (not cleared) when the
+ * reminder is disabled so re-enabling it pre-fills the same values.
+ */
 data class TripDatesDraft(
     val oneWay: Boolean,
     val departureDate: String,
     val returnDate: String,
-    val reminderEnabled: Boolean
+    val reminderEnabled: Boolean,
+    val reminderDate: String = "",
+    val reminderTime: String = ""
 )
 
 /** Stateless representation of the shared TRIP_CREATE_DATES screen. */
@@ -56,7 +66,9 @@ fun TripCreateDatesScreen(
     returnDate: String,
     onReturnDateChange: (String) -> Unit,
     reminderEnabled: Boolean,
-    onReminderEnabledChange: (Boolean) -> Unit,
+    reminderSummary: String?,
+    onOpenReminderPicker: () -> Unit,
+    onReminderDisabled: () -> Unit,
     onLoadTicket: () -> Unit,
     onBack: () -> Unit,
     onNextStep: () -> Unit,
@@ -157,17 +169,54 @@ fun TripCreateDatesScreen(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodySmall
             )
-            Row(
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                Text(
-                    text = stringResource(R.string.trip_reminder_label),
-                    color = MaterialTheme.colorScheme.onBackground,
-                    style = MaterialTheme.typography.titleSmall
-                )
-                Switch(checked = reminderEnabled, onCheckedChange = onReminderEnabledChange)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        // Turning the control on navigates to REMINDER_PICKER rather than enabling
+                        // the reminder directly (Flow 10, steps 1-5: the reminder is only confirmed
+                        // once "Set a reminder" is pressed there). Turning it off disables the
+                        // reminder immediately -- coherent "remove" behavior for a control that has
+                        // no real OS notification to cancel.
+                        .toggleable(
+                            value = reminderEnabled,
+                            onValueChange = { checked ->
+                                if (checked) onOpenReminderPicker() else onReminderDisabled()
+                            },
+                            role = Role.Switch
+                        )
+                        .testTag("trip_reminder_toggle"),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(R.string.trip_reminder_label),
+                        color = MaterialTheme.colorScheme.onBackground,
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                    // Switch itself is non-interactive; the enclosing Row's toggleable() drives it
+                    // so the label and control share one accessible tap target and announcement.
+                    Switch(checked = reminderEnabled, onCheckedChange = null)
+                }
+                if (reminderEnabled && reminderSummary != null) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = reminderSummary,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                        TextButton(onClick = onOpenReminderPicker) {
+                            Text(text = stringResource(R.string.trip_reminder_edit))
+                        }
+                    }
+                }
             }
             Button(
                 onClick = onNextStep,
@@ -223,7 +272,9 @@ private fun TripCreateDatesRoundTripPreview() {
             returnDate = "",
             onReturnDateChange = {},
             reminderEnabled = false,
-            onReminderEnabledChange = {},
+            reminderSummary = null,
+            onOpenReminderPicker = {},
+            onReminderDisabled = {},
             onLoadTicket = {},
             onBack = {},
             onNextStep = {}
@@ -243,7 +294,9 @@ private fun TripCreateDatesOneWayPreview() {
             returnDate = "",
             onReturnDateChange = {},
             reminderEnabled = true,
-            onReminderEnabledChange = {},
+            reminderSummary = "Reminder: 2026-09-30 at 09:00",
+            onOpenReminderPicker = {},
+            onReminderDisabled = {},
             onLoadTicket = {},
             onBack = {},
             onNextStep = {}
