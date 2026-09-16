@@ -1,15 +1,14 @@
 package co.check2go.feature.checklists
 
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.DropdownMenu
@@ -34,14 +33,21 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.text
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import co.check2go.R
 import co.check2go.ui.theme.Check2GoTheme
 
@@ -105,28 +111,9 @@ fun ChecklistCreateScreen(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        containerColor = MaterialTheme.colorScheme.background,
+        containerColor = Color(0xFFF4F7FA),
         topBar = {
-            TopAppBar(
-                title = { Text(text = title) },
-                navigationIcon = {
-                    TextButton(onClick = onBack) {
-                        Text(text = stringResource(R.string.trip_back))
-                    }
-                },
-                actions = {
-                    if (onDuplicateChecklist != null) {
-                        TextButton(onClick = onDuplicateChecklist) {
-                            Text(text = stringResource(R.string.checklist_duplicate_action))
-                        }
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    navigationIconContentColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onBackground
-                )
-            )
+            ChecklistEditorHeader(title, onBack)
         }
     ) { contentPadding ->
         Column(
@@ -134,24 +121,35 @@ fun ChecklistCreateScreen(
                 .fillMaxSize()
                 .padding(contentPadding)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp, vertical = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+                .padding(horizontal = 16.dp, vertical = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            OutlinedTextField(
-                value = draft.name,
-                onValueChange = onNameChange,
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text(text = stringResource(R.string.checklist_name_label)) },
-                singleLine = true
-            )
+            Column(
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Color.White).padding(10.dp)
+            ) {
+                Text(stringResource(R.string.checklist_name_label), color = Color(0xFF002349), fontSize = 16.sp)
+                OutlinedTextField(
+                    value = draft.name, onValueChange = onNameChange,
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text("Checklist name", color = Color(0xFF8D919A)) },
+                    singleLine = true, shape = RoundedCornerShape(11.dp)
+                )
+                Text("You can create your own title", color = Color(0xFFB9BBC1), fontSize = 12.sp)
+                Text("Link with trip", Modifier.padding(top = 10.dp), color = Color(0xFF002349), fontSize = 16.sp)
+                OutlinedTextField(
+                    value = "London - Tel Aviv", onValueChange = {}, readOnly = true,
+                    modifier = Modifier.fillMaxWidth(), singleLine = true, shape = RoundedCornerShape(11.dp),
+                    trailingIcon = { Text("⌄", color = Color(0xFF8D919A), fontSize = 20.sp) }
+                )
+                Text("Link this checklist to your trip and it will appear in your trip\ndetails", color = Color(0xFFB9BBC1), fontSize = 12.sp, lineHeight = 14.sp)
+            }
 
-            SectionsEditor(
-                sections = draft.sections,
-                newSectionName = newSectionName,
-                onNewSectionNameChange = onNewSectionNameChange,
-                onAddSection = onAddSection,
-                onSectionNameChange = onSectionNameChange,
-                onRemoveSection = onRemoveSection
+            ItemsList(
+                items = draft.items, sections = draft.sections,
+                onItemNameChange = onItemNameChange,
+                onItemSectionChange = onItemSectionChange,
+                onItemIncludeFileChange = onItemIncludeFileChange,
+                onRemoveItem = onRemoveItem
             )
 
             NewItemEditor(
@@ -165,23 +163,63 @@ fun ChecklistCreateScreen(
                 onAddItem = onAddItem
             )
 
-            ItemsList(
-                items = draft.items,
+            ChecklistEditorAction("☷", "Use now")
+            ChecklistEditorAction("↗", "Share checklist")
+            if (onDuplicateChecklist != null) {
+                ChecklistEditorAction("▣", stringResource(R.string.checklist_duplicate_action), onDuplicateChecklist)
+            }
+            ChecklistEditorAction("♙", "Delete checklist", color = Color(0xFFC23C68))
+
+            SectionsEditor(
                 sections = draft.sections,
-                onItemNameChange = onItemNameChange,
-                onItemSectionChange = onItemSectionChange,
-                onItemIncludeFileChange = onItemIncludeFileChange,
-                onRemoveItem = onRemoveItem
+                newSectionName = newSectionName,
+                onNewSectionNameChange = onNewSectionNameChange,
+                onAddSection = onAddSection,
+                onSectionNameChange = onSectionNameChange,
+                onRemoveSection = onRemoveSection
             )
 
-            Button(
-                onClick = onSave,
-                enabled = canSave,
-                modifier = Modifier.fillMaxWidth()
+            Box(
+                Modifier.fillMaxWidth().height(43.dp).clip(RoundedCornerShape(10.dp))
+                    .background(if (canSave) Color(0xFF043CB3) else Color(0xFFB8C2D2))
+                    .clickable(enabled = canSave, onClick = onSave),
+                contentAlignment = Alignment.Center
             ) {
-                Text(text = stringResource(R.string.checklist_save))
+                Text(stringResource(R.string.checklist_save), color = Color.White, fontSize = 16.sp)
             }
         }
+    }
+}
+
+@Composable
+private fun ChecklistEditorHeader(title: String, onBack: () -> Unit) {
+    val muted = Color(0xFF8D919A)
+    val backLabel = stringResource(R.string.trip_back)
+    Row(
+        Modifier.fillMaxWidth().height(98.dp).background(Color.White).statusBarsPadding().padding(horizontal = 18.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Image(
+            painterResource(R.drawable.c2g_arrow_left), null,
+            Modifier.size(20.dp).clickable(onClick = onBack).semantics { text = AnnotatedString(backLabel) },
+            colorFilter = ColorFilter.tint(muted)
+        )
+        Spacer(Modifier.weight(1f)); Text(title, color = Color(0xFF002349), fontSize = 20.sp, fontWeight = FontWeight.SemiBold); Spacer(Modifier.weight(1f))
+        listOf(R.drawable.c2g_settings, R.drawable.c2g_help, R.drawable.c2g_notification).forEachIndexed { index, icon ->
+            if (index > 0) Spacer(Modifier.width(12.dp))
+            Image(painterResource(icon), null, Modifier.size(21.dp), colorFilter = ColorFilter.tint(muted))
+        }
+    }
+}
+
+@Composable
+private fun ChecklistEditorAction(icon: String, label: String, onClick: (() -> Unit)? = null, color: Color = Color(0xFF002349)) {
+    Row(
+        Modifier.fillMaxWidth().height(25.dp).clickable(enabled = onClick != null) { onClick?.invoke() },
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(icon, color = color, fontSize = 21.sp, modifier = Modifier.width(32.dp))
+        Text(label, color = color, fontSize = 17.sp)
     }
 }
 
@@ -265,45 +303,40 @@ private fun NewItemEditor(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .border(1.dp, MaterialTheme.colorScheme.onSurfaceVariant)
+            .clip(RoundedCornerShape(14.dp))
+            .background(Color.White)
             .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Text(
-            text = stringResource(R.string.checklist_add_item_title),
-            color = MaterialTheme.colorScheme.onBackground,
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.SemiBold
-        )
-        OutlinedTextField(
-            value = newItemName,
-            onValueChange = onNewItemNameChange,
-            modifier = Modifier
-                .fillMaxWidth()
-                .testTag("new_item_name_field"),
-            label = { Text(text = stringResource(R.string.checklist_item_name_label)) },
-            singleLine = true
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            OutlinedTextField(
+                value = newItemName, onValueChange = onNewItemNameChange,
+                modifier = Modifier.weight(1f).testTag("new_item_name_field"),
+                placeholder = { Text(stringResource(R.string.checklist_item_name_label), color = Color(0xFF8D919A)) },
+                singleLine = true, shape = RoundedCornerShape(10.dp)
+            )
+            IncludeFileToggleRow(
+                checked = newItemIncludeFile,
+                onCheckedChange = onNewItemIncludeFileChange,
+                modifier = Modifier.width(104.dp).testTag("new_item_include_file_toggle")
+            )
+        }
+
+        if (sections.isNotEmpty()) SectionDropdownField(
+            sections, newItemSectionId, onNewItemSectionIdChange, "new_item_section_field"
         )
 
-        SectionDropdownField(
-            sections = sections,
-            selectedSectionId = newItemSectionId,
-            onSectionSelected = onNewItemSectionIdChange,
-            testTag = "new_item_section_field"
-        )
-
-        IncludeFileToggleRow(
-            checked = newItemIncludeFile,
-            onCheckedChange = onNewItemIncludeFileChange,
-            modifier = Modifier.testTag("new_item_include_file_toggle")
-        )
-
-        OutlinedButton(
-            onClick = onAddItem,
-            enabled = newItemName.isNotBlank(),
-            modifier = Modifier.fillMaxWidth()
+        Box(
+            Modifier.align(Alignment.End).height(36.dp).clip(RoundedCornerShape(18.dp))
+                .background(Color(0xFFF0F3F7)).clickable(enabled = newItemName.isNotBlank(), onClick = onAddItem)
+                .padding(horizontal = 16.dp),
+            contentAlignment = Alignment.Center
         ) {
-            Text(text = stringResource(R.string.checklist_add_item))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("+", color = Color(0xFF043CB3), fontSize = 20.sp)
+                Spacer(Modifier.width(7.dp))
+                Text(stringResource(R.string.checklist_add_item), color = Color(0xFF043CB3), fontSize = 16.sp)
+            }
         }
     }
 }
