@@ -1,40 +1,27 @@
 package co.check2go.feature.checklists
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import co.check2go.R
 import co.check2go.ui.theme.Check2GoTheme
 
-/**
- * Shared screen ID: CHECKLIST_DUPLICATE_CONFIRMATION (docs/flows.md Flow 9, steps 3-4;
- * docs/screen-inventory.md "Duplicate success bottom sheet", PDF page 41). Reached after
- * CHECKLIST_DETAIL or CHECKLIST_EDIT's "Duplicate checklist" action creates the copy.
- *
- * The current Figma/PDF renders this as a bottom sheet with specific spacing/typography that has
- * not been recovered as exact values (see docs/design/design-tokens.md's rule against inventing
- * missing dimensions). This is deliberately a plain, clearly temporary full-screen Compose surface
- * using only default Material3 styling instead of a guessed-final bottom sheet.
- *
- * Stateless: duplication itself already happened by the time this is shown, so this screen only
- * confirms it and forwards the two documented choices -- [onGoBack] (Flow 9 step 4 "Go back") and
- * [onUseNow] (Flow 9 step 4 "Use now") -- to the caller, which owns navigation.
- */
+/** Approved Figma duplicate-success bottom sheet 1:28318. */
 @Composable
 fun ChecklistDuplicateConfirmationScreen(
     checklistName: String,
@@ -42,57 +29,51 @@ fun ChecklistDuplicateConfirmationScreen(
     onUseNow: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Scaffold(
-        modifier = modifier.fillMaxSize(),
-        containerColor = MaterialTheme.colorScheme.background
-    ) { contentPadding ->
+    Box(modifier.fillMaxSize().background(Color(0x99002349))) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(contentPadding)
-                .padding(horizontal = 24.dp, vertical = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp, alignment = Alignment.CenterVertically),
+            Modifier.align(Alignment.BottomCenter).fillMaxWidth()
+                .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)).background(Color.White)
+                .navigationBarsPadding().padding(horizontal = 16.dp, vertical = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = stringResource(R.string.checklist_duplicate_confirmation_title),
-                color = MaterialTheme.colorScheme.onBackground,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.SemiBold
-            )
-            Text(
-                text = checklistName,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodyLarge
-            )
-            Button(
-                onClick = onUseNow,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("checklist_duplicate_use_now")
-            ) {
-                Text(text = stringResource(R.string.checklist_duplicate_use_now))
+            Box(Modifier.width(48.dp).height(5.dp).clip(RoundedCornerShape(3.dp)).background(Color.White))
+            Spacer(Modifier.height(35.dp))
+            Box(Modifier.size(40.dp).clip(CircleShape).background(Color(0xFF2FC768)), contentAlignment = Alignment.Center) {
+                Text("▣", color = Color.White, fontSize = 21.sp)
             }
-            OutlinedButton(
-                onClick = onGoBack,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("checklist_duplicate_go_back")
-            ) {
-                Text(text = stringResource(R.string.checklist_duplicate_go_back))
+            Spacer(Modifier.height(17.dp))
+            Text(
+                stringResource(R.string.checklist_duplicate_confirmation_title),
+                color = Color(0xFF002349), fontSize = 20.sp, fontWeight = FontWeight.SemiBold,
+                textAlign = TextAlign.Center
+            )
+            Text("Now you can use it!", Modifier.padding(top = 4.dp), color = Color(0xFF002349), fontSize = 16.sp)
+            Text(checklistName, Modifier.padding(top = 2.dp), color = Color(0xFF8D919A), fontSize = 12.sp)
+            Spacer(Modifier.height(25.dp))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                SheetButton(
+                    stringResource(R.string.checklist_duplicate_go_back), onGoBack,
+                    Color(0xFFF0F3F7), Color(0xFF043CB3), "checklist_duplicate_go_back", Modifier.weight(1f)
+                )
+                SheetButton(
+                    stringResource(R.string.checklist_duplicate_use_now), onUseNow,
+                    Color(0xFF043CB3), Color.White, "checklist_duplicate_use_now", Modifier.weight(1f)
+                )
             }
         }
     }
 }
 
-@Preview(showBackground = true)
 @Composable
-private fun ChecklistDuplicateConfirmationPreview() {
-    Check2GoTheme(darkTheme = false) {
-        ChecklistDuplicateConfirmationScreen(
-            checklistName = "Before leaving (copy)",
-            onGoBack = {},
-            onUseNow = {}
-        )
-    }
+private fun SheetButton(label: String, onClick: () -> Unit, background: Color, foreground: Color, tag: String, modifier: Modifier) {
+    Box(
+        modifier.height(41.dp).clip(RoundedCornerShape(10.dp)).background(background)
+            .clickable(onClick = onClick).testTag(tag), contentAlignment = Alignment.Center
+    ) { Text(label, color = foreground, fontSize = 16.sp) }
+}
+
+@Preview(showBackground = true, widthDp = 393, heightDp = 852)
+@Composable
+private fun ChecklistDuplicateConfirmationPreview() = Check2GoTheme(false) {
+    ChecklistDuplicateConfirmationScreen("Before leaving", {}, {})
 }
