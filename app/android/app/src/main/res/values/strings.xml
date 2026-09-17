@@ -8,6 +8,8 @@
     <string name="settings_language_description">Choose the language used throughout Check2GO.</string>
     <string name="language_english">English</string>
     <string name="language_russian">Русский</string>
+    <string name="theme_switch_to_dark">Switch to Dark Mode</string>
+    <string name="theme_switch_to_light">Switch to Light Mode</string>
     <string name="documents_title">Documents</string>
     <string name="documents_description">Store and manage your travel documents in one place.</string>
     <string name="documents_search">Search documents...</string>

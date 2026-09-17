@@ -24,13 +24,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.material3.Text
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material3.MaterialTheme
 import co.check2go.R
 
 @Composable
-internal fun AppHeader(onAccountClick: () -> Unit = {}, onSettingsClick: () -> Unit = {}) {
-    val iconColor = Color(0xFF8D919A)
+internal fun AppHeader(
+    onAccountClick: () -> Unit = {},
+    onSettingsClick: () -> Unit = {},
+    onToggleTheme: (() -> Unit)? = null,
+    isDarkTheme: Boolean = false
+) {
+    val iconColor = MaterialTheme.colorScheme.onSurfaceVariant
     Row(
-        modifier = Modifier.fillMaxWidth().height(98.dp).background(Color.White)
+        modifier = Modifier.fillMaxWidth().height(98.dp).background(MaterialTheme.colorScheme.surface)
             .statusBarsPadding().padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -38,20 +44,32 @@ internal fun AppHeader(onAccountClick: () -> Unit = {}, onSettingsClick: () -> U
         Spacer(Modifier.weight(1f))
         Text(
             stringResource(R.string.app_name),
-            color = Color(0xFF002349),
+            color = MaterialTheme.colorScheme.onSurface,
             fontSize = 18.sp,
             fontWeight = FontWeight.SemiBold
         )
         Spacer(Modifier.weight(1f))
         HeaderIcon(R.drawable.c2g_settings, iconColor, stringResource(R.string.settings_title), onSettingsClick)
         Spacer(Modifier.width(10.dp))
+        if (onToggleTheme != null) {
+            Text(
+                text = if (isDarkTheme) "☀" else "☾",
+                color = iconColor,
+                fontSize = 24.sp,
+                modifier = Modifier.size(24.dp).clickable(
+                    onClickLabel = stringResource(if (isDarkTheme) R.string.theme_switch_to_light else R.string.theme_switch_to_dark),
+                    onClick = onToggleTheme
+                )
+            )
+            Spacer(Modifier.width(10.dp))
+        }
         HeaderIcon(R.drawable.c2g_help, iconColor)
         Spacer(Modifier.width(10.dp))
         Box {
             HeaderIcon(R.drawable.c2g_notification, iconColor)
             Box(
                 Modifier.align(Alignment.TopEnd).size(5.dp)
-                    .background(Color(0xFFC45777), CircleShape)
+                    .background(MaterialTheme.colorScheme.error, CircleShape)
             )
         }
     }
