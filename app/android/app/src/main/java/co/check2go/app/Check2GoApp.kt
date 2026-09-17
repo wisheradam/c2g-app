@@ -8,6 +8,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.LocalContext
 import co.check2go.R
 import co.check2go.core.design.AppDestination
 import co.check2go.feature.checklists.ChecklistCreateScreen
@@ -41,6 +42,7 @@ import co.check2go.feature.account.FamilyMembersScreen
 import co.check2go.feature.account.InterestsScreen
 import co.check2go.feature.account.PrivacyConsentScreen
 import co.check2go.feature.account.TravelStatusScreen
+import co.check2go.feature.account.LocalAccountStore
 import co.check2go.feature.home.HomeEmptyScreen
 import co.check2go.feature.home.MyTripsScreen
 import co.check2go.feature.events.EventCalendarScreen
@@ -98,7 +100,16 @@ fun Check2GoApp(
     onChecklistCreated: (ChecklistDraft) -> Unit = {}
 ) {
     var screen by rememberSaveable { mutableStateOf(AppScreen.Home) }
-    var personalAccount by remember { mutableStateOf(PersonalAccount()) }
+    val context = LocalContext.current.applicationContext
+    val accountStore = remember(context) {
+        LocalAccountStore(context)
+    }
+    var personalAccount by remember { mutableStateOf(accountStore.load()) }
+
+    fun persistPersonalAccount(updated: PersonalAccount) {
+        accountStore.save(updated)
+        personalAccount = updated
+    }
 
     var destinationCountry by rememberSaveable { mutableStateOf("") }
     var departureCountry by rememberSaveable { mutableStateOf("") }
@@ -252,7 +263,7 @@ fun Check2GoApp(
                 account = personalAccount,
                 onBack = { screen = AppScreen.Home },
                 onSave = {
-                    personalAccount = it
+                    persistPersonalAccount(it)
                     screen = AppScreen.Home
                 },
                 onManageFamily = { screen = AppScreen.FamilyMembers },
@@ -265,7 +276,7 @@ fun Check2GoApp(
         AppScreen.FamilyMembers -> {
             FamilyMembersScreen(
                 account = personalAccount,
-                onAccountChange = { personalAccount = it },
+                onAccountChange = ::persistPersonalAccount,
                 onBack = { screen = AppScreen.AccountProfile }
             )
         }
@@ -273,7 +284,7 @@ fun Check2GoApp(
         AppScreen.Interests -> {
             InterestsScreen(
                 account = personalAccount,
-                onAccountChange = { personalAccount = it },
+                onAccountChange = ::persistPersonalAccount,
                 onBack = { screen = AppScreen.AccountProfile }
             )
         }
@@ -281,7 +292,7 @@ fun Check2GoApp(
         AppScreen.PrivacyConsent -> {
             PrivacyConsentScreen(
                 account = personalAccount,
-                onAccountChange = { personalAccount = it },
+                onAccountChange = ::persistPersonalAccount,
                 onBack = { screen = AppScreen.AccountProfile }
             )
         }
@@ -289,7 +300,7 @@ fun Check2GoApp(
         AppScreen.TravelStatus -> {
             TravelStatusScreen(
                 account = personalAccount,
-                onAccountChange = { personalAccount = it },
+                onAccountChange = ::persistPersonalAccount,
                 onBack = { screen = AppScreen.AccountProfile }
             )
         }
