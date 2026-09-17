@@ -100,6 +100,8 @@ fun AccountProfileScreen(
     onBack: () -> Unit,
     onSave: (PersonalAccount) -> Unit,
     onManageFamily: () -> Unit = {},
+    onManageInterests: () -> Unit = {},
+    onManagePrivacy: () -> Unit = {},
     referenceDate: LocalDate = LocalDate.now()
 ) {
     BackHandler(onBack = onBack)
@@ -121,6 +123,16 @@ fun AccountProfileScreen(
             item {
                 OutlinedButton(onClick = onManageFamily, modifier = Modifier.fillMaxWidth()) {
                     Text("Family members (${account.familyMembers.size})")
+                }
+            }
+            item {
+                OutlinedButton(onClick = onManageInterests, modifier = Modifier.fillMaxWidth()) {
+                    Text("Interests (${account.interests.size})")
+                }
+            }
+            item {
+                OutlinedButton(onClick = onManagePrivacy, modifier = Modifier.fillMaxWidth()) {
+                    Text("Privacy and consent")
                 }
             }
             item { Text("Personal details", style = MaterialTheme.typography.titleLarge) }

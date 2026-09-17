@@ -38,6 +38,8 @@ import co.check2go.feature.checklists.ShareChecklistScreen
 import co.check2go.feature.account.AccountProfileScreen
 import co.check2go.feature.account.PersonalAccount
 import co.check2go.feature.account.FamilyMembersScreen
+import co.check2go.feature.account.InterestsScreen
+import co.check2go.feature.account.PrivacyConsentScreen
 import co.check2go.feature.home.HomeEmptyScreen
 import co.check2go.feature.home.MyTripsScreen
 import co.check2go.feature.events.EventCalendarScreen
@@ -73,7 +75,9 @@ private enum class AppScreen {
     TripHub,
     EventsCalendar,
     AccountProfile,
-    FamilyMembers
+    FamilyMembers,
+    Interests,
+    PrivacyConsent
 }
 
 /**
@@ -249,12 +253,30 @@ fun Check2GoApp(
                     personalAccount = it
                     screen = AppScreen.Home
                 },
-                onManageFamily = { screen = AppScreen.FamilyMembers }
+                onManageFamily = { screen = AppScreen.FamilyMembers },
+                onManageInterests = { screen = AppScreen.Interests },
+                onManagePrivacy = { screen = AppScreen.PrivacyConsent }
             )
         }
 
         AppScreen.FamilyMembers -> {
             FamilyMembersScreen(
+                account = personalAccount,
+                onAccountChange = { personalAccount = it },
+                onBack = { screen = AppScreen.AccountProfile }
+            )
+        }
+
+        AppScreen.Interests -> {
+            InterestsScreen(
+                account = personalAccount,
+                onAccountChange = { personalAccount = it },
+                onBack = { screen = AppScreen.AccountProfile }
+            )
+        }
+
+        AppScreen.PrivacyConsent -> {
+            PrivacyConsentScreen(
                 account = personalAccount,
                 onAccountChange = { personalAccount = it },
                 onBack = { screen = AppScreen.AccountProfile }
