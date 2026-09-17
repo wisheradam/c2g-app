@@ -6,6 +6,7 @@ import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.performClick
 import co.check2go.ui.theme.Check2GoTheme
 import org.junit.Assert.assertEquals
@@ -15,6 +16,31 @@ import org.junit.Test
 class ChecklistDetailScreenTest {
     @get:Rule
     val composeRule = createComposeRule()
+
+    @Test
+    fun transferChecklistShowsApprovedCarRentalVariant() {
+        composeRule.setContent {
+            Check2GoTheme {
+                ChecklistDetailScreen(CompletedChecklist(1, "Transfer"), {}, {}, {}, {})
+            }
+        }
+
+        composeRule.onNodeWithTag("transfer_promo").assertIsDisplayed()
+        composeRule.onNodeWithText("Request for car rental").assertIsDisplayed()
+        composeRule.onAllNodesWithText("Jun 9, 2024 at 9:41 AM")[0].assertIsDisplayed()
+    }
+
+    @Test
+    fun accommodationChecklistShowsApprovedTeamVariant() {
+        composeRule.setContent {
+            Check2GoTheme {
+                ChecklistDetailScreen(CompletedChecklist(1, "Accommodation"), {}, {}, {}, {})
+            }
+        }
+
+        composeRule.onNodeWithTag("team_checklists_promo").assertIsDisplayed()
+        composeRule.onNodeWithText("Team checklists").assertIsDisplayed()
+    }
 
     private val checklist = CompletedChecklist(
         id = 1L,
