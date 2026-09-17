@@ -58,6 +58,8 @@ import java.time.Instant
 import co.check2go.feature.home.HomeEmptyScreen
 import co.check2go.feature.home.MyTripsScreen
 import co.check2go.feature.events.EventCalendarScreen
+import co.check2go.feature.settings.LanguageSettingsScreen
+import co.check2go.core.localization.AppLanguage
 import co.check2go.feature.trip.CompletedTrip
 import co.check2go.feature.trip.CompletedTripListSaver
 import co.check2go.feature.trip.ReminderPickerScreen
@@ -94,6 +96,7 @@ private enum class AppScreen {
     Interests,
     PrivacyConsent,
     TravelStatus,
+    Settings,
     Documents,
     DocumentEditor
 }
@@ -110,6 +113,10 @@ private enum class AppScreen {
  */
 @Composable
 fun Check2GoApp(
+    selectedLanguage: AppLanguage = AppLanguage.English,
+    onLanguageChanged: (AppLanguage) -> Unit = {},
+    onToggleTheme: () -> Unit = {},
+    isDarkTheme: Boolean = false,
     onTripCreateComplete: (TripDestinationDraft, TripDatesDraft, TripTravelersDraft) -> Unit,
     onChecklistCreated: (ChecklistDraft) -> Unit = {}
 ) {
@@ -275,7 +282,10 @@ fun Check2GoApp(
                     onAddTrip = startNewTripDraft,
                     onQuickAdd = startNewTripDraft,
                     onDestinationSelected = onAppDestinationSelected,
-                    onAccountClick = { screen = AppScreen.AccountProfile }
+                    onAccountClick = { screen = AppScreen.AccountProfile },
+                    onSettingsClick = { screen = AppScreen.Settings },
+                    onToggleTheme = onToggleTheme,
+                    isDarkTheme = isDarkTheme
                 )
             } else {
                 MyTripsScreen(
@@ -289,10 +299,19 @@ fun Check2GoApp(
                         selectedTripId = it
                         screen = AppScreen.TripHub
                     },
-                    onAccountClick = { screen = AppScreen.AccountProfile }
+                    onAccountClick = { screen = AppScreen.AccountProfile },
+                    onSettingsClick = { screen = AppScreen.Settings },
+                    onToggleTheme = onToggleTheme,
+                    isDarkTheme = isDarkTheme
                 )
             }
         }
+
+        AppScreen.Settings -> LanguageSettingsScreen(
+            selectedLanguage = selectedLanguage,
+            onLanguageSelected = onLanguageChanged,
+            onBack = { screen = AppScreen.Home }
+        )
 
         AppScreen.Documents -> {
             DocumentsScreen(

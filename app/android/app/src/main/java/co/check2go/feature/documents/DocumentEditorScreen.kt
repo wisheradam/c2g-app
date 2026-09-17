@@ -37,6 +37,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import java.time.Instant
 import java.time.LocalDate
@@ -45,6 +46,7 @@ import java.util.UUID
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import co.check2go.R
 
 data class DocumentDraft(
     val id: String? = null,
@@ -172,8 +174,8 @@ fun DocumentEditorScreen(
 
     Scaffold(topBar = {
         TopAppBar(
-            title = { Text(if (draft.id == null) "Add Document" else "Edit Document") },
-            navigationIcon = { TextButton(onClick = ::cancel, enabled = !importing) { Text("Back") } }
+            title = { Text(if (draft.id == null) stringResource(R.string.document_editor_add) else stringResource(R.string.document_editor_edit)) },
+            navigationIcon = { TextButton(onClick = ::cancel, enabled = !importing) { Text(stringResource(R.string.common_back)) } }
         )
     }) { padding ->
         Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.TopCenter) {
@@ -182,11 +184,11 @@ fun DocumentEditorScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 item {
-                    Text("1. Select category", style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.document_step_category), style = MaterialTheme.typography.titleMedium)
                     Box {
-                        OutlinedButton(onClick = { categoryMenu = true }, modifier = Modifier.fillMaxWidth()) { Text(draft.category.displayName) }
+                        OutlinedButton(onClick = { categoryMenu = true }, modifier = Modifier.fillMaxWidth()) { Text(draft.category.localizedName()) }
                         DropdownMenu(categoryMenu, { categoryMenu = false }) {
-                            DocumentCategory.entries.forEach { category -> DropdownMenuItem({ Text(category.displayName) }, {
+                            DocumentCategory.entries.forEach { category -> DropdownMenuItem({ Text(category.localizedName()) }, {
                                 val first = category.types.first()
                                 draft = draft.copy(category = category, typeId = first.id, typeName = first.name)
                                 categoryMenu = false
@@ -195,14 +197,14 @@ fun DocumentEditorScreen(
                     }
                 }
                 item {
-                    Text("2. Select document type", style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.document_step_type), style = MaterialTheme.typography.titleMedium)
                     if (draft.custom) {
-                        EditorField("Custom document type", draft.customTypeName) { draft = draft.copy(customTypeName = it) }
+                        EditorField(stringResource(R.string.document_custom_type), draft.customTypeName) { draft = draft.copy(customTypeName = it) }
                     } else {
                         Box {
-                            OutlinedButton(onClick = { typeMenu = true }, modifier = Modifier.fillMaxWidth()) { Text(draft.typeName) }
+                            OutlinedButton(onClick = { typeMenu = true }, modifier = Modifier.fillMaxWidth()) { Text(draft.config.localizedName()) }
                             DropdownMenu(typeMenu, { typeMenu = false }) {
-                                draft.category.types.forEach { type -> DropdownMenuItem({ Text(type.name) }, {
+                                draft.category.types.forEach { type -> DropdownMenuItem({ Text(type.localizedName()) }, {
                                     draft = draft.copy(typeId = type.id, typeName = type.name)
                                     typeMenu = false
                                 }) }
@@ -210,33 +212,33 @@ fun DocumentEditorScreen(
                         }
                     }
                     TextButton(onClick = { draft = draft.copy(custom = !draft.custom, customTypeName = "") }) {
-                        Text(if (draft.custom) "Choose predefined type" else "+ Add Custom Document")
+                        Text(if (draft.custom) stringResource(R.string.document_predefined_type) else "+ " + stringResource(R.string.documents_add_custom))
                     }
                 }
-                item { Text("3. Document details", style = MaterialTheme.typography.titleMedium) }
-                item { EditorField("Document name", draft.name) { draft = draft.copy(name = it) } }
-                if (draft.custom) item { EditorField("Description", draft.description, 3) { draft = draft.copy(description = it) } }
+                item { Text(stringResource(R.string.document_step_details), style = MaterialTheme.typography.titleMedium) }
+                item { EditorField(stringResource(R.string.document_name), draft.name) { draft = draft.copy(name = it) } }
+                if (draft.custom) item { EditorField(stringResource(R.string.document_description), draft.description, 3) { draft = draft.copy(description = it) } }
                 val fields = draft.config.fields
-                if (DocumentField.CountryOfIssue in fields) item { EditorField("Country of issue", draft.countryOfIssue) { draft = draft.copy(countryOfIssue = it) } }
-                if (DocumentField.DocumentNumber in fields) item { EditorField("Document number", draft.documentNumber) { draft = draft.copy(documentNumber = it) } }
-                if (DocumentField.IssueDate in fields) item { EditorField("Date of issue (YYYY-MM-DD)", draft.issueDate) { draft = draft.copy(issueDate = it) } }
-                if (DocumentField.ExpirationDate in fields) item { EditorField("Expiration date (YYYY-MM-DD)", draft.expirationDate) { draft = draft.copy(expirationDate = it) } }
-                if (DocumentField.ValidFrom in fields) item { EditorField("Valid from (YYYY-MM-DD)", draft.validFrom) { draft = draft.copy(validFrom = it) } }
-                if (DocumentField.ValidUntil in fields) item { EditorField("Valid until (YYYY-MM-DD)", draft.validUntil) { draft = draft.copy(validUntil = it) } }
-                if (DocumentField.IssuingAuthority in fields) item { EditorField("Issuing authority", draft.issuingAuthority) { draft = draft.copy(issuingAuthority = it) } }
-                if (DocumentField.Citizenship in fields) item { EditorField("Citizenship", draft.citizenship) { draft = draft.copy(citizenship = it) } }
-                if (DocumentField.DestinationCountry in fields) item { EditorField("Destination country", draft.destinationCountry) { draft = draft.copy(destinationCountry = it) } }
-                if (DocumentField.Notes in fields) item { EditorField("Notes", draft.notes, 4) { draft = draft.copy(notes = it) } }
+                if (DocumentField.CountryOfIssue in fields) item { EditorField(stringResource(R.string.document_country_issue), draft.countryOfIssue) { draft = draft.copy(countryOfIssue = it) } }
+                if (DocumentField.DocumentNumber in fields) item { EditorField(stringResource(R.string.document_number), draft.documentNumber) { draft = draft.copy(documentNumber = it) } }
+                if (DocumentField.IssueDate in fields) item { EditorField(stringResource(R.string.document_issue_date), draft.issueDate) { draft = draft.copy(issueDate = it) } }
+                if (DocumentField.ExpirationDate in fields) item { EditorField(stringResource(R.string.document_expiration_date), draft.expirationDate) { draft = draft.copy(expirationDate = it) } }
+                if (DocumentField.ValidFrom in fields) item { EditorField(stringResource(R.string.document_valid_from), draft.validFrom) { draft = draft.copy(validFrom = it) } }
+                if (DocumentField.ValidUntil in fields) item { EditorField(stringResource(R.string.document_valid_until), draft.validUntil) { draft = draft.copy(validUntil = it) } }
+                if (DocumentField.IssuingAuthority in fields) item { EditorField(stringResource(R.string.document_issuing_authority), draft.issuingAuthority) { draft = draft.copy(issuingAuthority = it) } }
+                if (DocumentField.Citizenship in fields) item { EditorField(stringResource(R.string.document_citizenship), draft.citizenship) { draft = draft.copy(citizenship = it) } }
+                if (DocumentField.DestinationCountry in fields) item { EditorField(stringResource(R.string.document_destination), draft.destinationCountry) { draft = draft.copy(destinationCountry = it) } }
+                if (DocumentField.Notes in fields) item { EditorField(stringResource(R.string.document_notes), draft.notes, 4) { draft = draft.copy(notes = it) } }
                 if (draft.config.supportsPrimary) {
-                    item { CheckRow("Primary document", draft.isPrimary) { draft = draft.copy(isPrimary = it) } }
-                    item { CheckRow("Use for travel recommendations", draft.recommendations) { draft = draft.copy(recommendations = it) } }
+                    item { CheckRow(stringResource(R.string.document_primary), draft.isPrimary) { draft = draft.copy(isPrimary = it) } }
+                    item { CheckRow(stringResource(R.string.document_recommendations), draft.recommendations) { draft = draft.copy(recommendations = it) } }
                 }
-                item { Text("4. Attachments", style = MaterialTheme.typography.titleMedium) }
+                item { Text(stringResource(R.string.document_step_attachments), style = MaterialTheme.typography.titleMedium) }
                 if (!hasDocumentConsent) {
                     item {
                         Column {
-                            Text("Uploaded documents may contain sensitive personal information and are used to provide personalized travel and entry recommendations.")
-                            CheckRow("I agree to the processing of my document information.", consent) {
+                            Text(stringResource(R.string.document_sensitive_notice))
+                            CheckRow(stringResource(R.string.document_upload_consent), consent) {
                                 consent = it
                                 if (it) onAcceptDocumentConsent()
                             }
@@ -250,13 +252,13 @@ fun DocumentEditorScreen(
                                 Text(attachment.displayName, maxLines = 1)
                                 Text("${attachment.mimeType} · ${attachment.role.name}", style = MaterialTheme.typography.bodySmall)
                             }
-                            TextButton(onClick = { onOpenAttachment(attachment) }) { Text("View") }
+                            TextButton(onClick = { onOpenAttachment(attachment) }) { Text(stringResource(R.string.common_view)) }
                             TextButton(onClick = {
                                 importRole = attachment.role; replacingId = attachment.id
                                 singlePicker.launch(LocalDocumentStore.ALLOWED_MIME_TYPES.toTypedArray())
-                            }, enabled = consent && !importing) { Text("Replace") }
+                            }, enabled = consent && !importing) { Text(stringResource(R.string.document_replace)) }
                             TextButton(onClick = { deletingAttachment = attachment }) {
-                                Text("Delete", color = MaterialTheme.colorScheme.error)
+                                Text(stringResource(R.string.common_delete), color = MaterialTheme.colorScheme.error)
                             }
                         }
                     }
@@ -266,12 +268,12 @@ fun DocumentEditorScreen(
                         OutlinedButton(onClick = {
                             importRole = AttachmentRole.General; replacingId = null
                             multiplePicker.launch(LocalDocumentStore.ALLOWED_MIME_TYPES.toTypedArray())
-                        }, enabled = consent && !importing, modifier = Modifier.weight(1f)) { Text(if (importing) "Uploading..." else "Upload files") }
+                        }, enabled = consent && !importing, modifier = Modifier.weight(1f)) { Text(if (importing) stringResource(R.string.document_uploading) else stringResource(R.string.document_upload_files)) }
                         if (draft.category == DocumentCategory.Identity) {
                             OutlinedButton(onClick = {
                                 importRole = AttachmentRole.FrontSide; replacingId = null
                                 singlePicker.launch(arrayOf("image/jpeg", "image/png"))
-                            }, enabled = consent && !importing, modifier = Modifier.weight(1f)) { Text("Front side") }
+                            }, enabled = consent && !importing, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.document_front_side)) }
                         }
                     }
                 }
@@ -280,7 +282,7 @@ fun DocumentEditorScreen(
                         OutlinedButton(onClick = {
                             importRole = AttachmentRole.BackSide; replacingId = null
                             singlePicker.launch(arrayOf("image/jpeg", "image/png"))
-                        }, enabled = consent && !importing, modifier = Modifier.fillMaxWidth()) { Text("Back side") }
+                        }, enabled = consent && !importing, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.document_back_side)) }
                     }
                 }
                 item { error?.let { Text(it, color = MaterialTheme.colorScheme.error) } }
@@ -288,7 +290,7 @@ fun DocumentEditorScreen(
                     Button(onClick = {
                         error = draft.validationError()
                         if (error == null) onSave(draft.toDocument())
-                    }, enabled = !importing, modifier = Modifier.fillMaxWidth().testTag("document_save")) { Text("Save Document") }
+                }, enabled = !importing, modifier = Modifier.fillMaxWidth().testTag("document_save")) { Text(stringResource(R.string.document_save)) }
                 }
                 item { Spacer(Modifier.height(24.dp)) }
             }

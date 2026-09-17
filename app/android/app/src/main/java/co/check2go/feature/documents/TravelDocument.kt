@@ -58,10 +58,10 @@ data class TravelDocument(
         return if (ChronoUnit.DAYS.between(on, end) <= warningDays) DocumentStatus.ExpiringSoon else DocumentStatus.Valid
     }
 
-    fun matches(query: String): Boolean {
+    fun matches(query: String, localizedCategory: String = category.displayName, localizedType: String = typeName): Boolean {
         val normalized = query.trim().lowercase()
         if (normalized.isEmpty()) return true
-        return listOfNotNull(name, typeName, customTypeName, category.displayName, countryOfIssue, documentNumber,
+        return listOfNotNull(name, typeName, localizedType, customTypeName, category.displayName, localizedCategory, countryOfIssue, documentNumber,
             citizenship, destinationCountry, notes, description).any { it.lowercase().contains(normalized) }
     }
 
