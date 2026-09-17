@@ -115,6 +115,8 @@ private enum class AppScreen {
 fun Check2GoApp(
     selectedLanguage: AppLanguage = AppLanguage.English,
     onLanguageChanged: (AppLanguage) -> Unit = {},
+    onToggleTheme: () -> Unit = {},
+    isDarkTheme: Boolean = false,
     onTripCreateComplete: (TripDestinationDraft, TripDatesDraft, TripTravelersDraft) -> Unit,
     onChecklistCreated: (ChecklistDraft) -> Unit = {}
 ) {
@@ -281,7 +283,9 @@ fun Check2GoApp(
                     onQuickAdd = startNewTripDraft,
                     onDestinationSelected = onAppDestinationSelected,
                     onAccountClick = { screen = AppScreen.AccountProfile },
-                    onSettingsClick = { screen = AppScreen.Settings }
+                    onSettingsClick = { screen = AppScreen.Settings },
+                    onToggleTheme = onToggleTheme,
+                    isDarkTheme = isDarkTheme
                 )
             } else {
                 MyTripsScreen(
@@ -296,7 +300,9 @@ fun Check2GoApp(
                         screen = AppScreen.TripHub
                     },
                     onAccountClick = { screen = AppScreen.AccountProfile },
-                    onSettingsClick = { screen = AppScreen.Settings }
+                    onSettingsClick = { screen = AppScreen.Settings },
+                    onToggleTheme = onToggleTheme,
+                    isDarkTheme = isDarkTheme
                 )
             }
         }

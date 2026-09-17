@@ -8,6 +8,8 @@
     <string name="settings_language_description">Выберите язык интерфейса Check2GO.</string>
     <string name="language_english">English</string>
     <string name="language_russian">Русский</string>
+    <string name="theme_switch_to_dark">Включить тёмную тему</string>
+    <string name="theme_switch_to_light">Включить светлую тему</string>
     <string name="documents_title">Документы</string>
     <string name="documents_description">Храните и управляйте документами для поездок в одном месте.</string>
     <string name="documents_search">Поиск документов...</string>

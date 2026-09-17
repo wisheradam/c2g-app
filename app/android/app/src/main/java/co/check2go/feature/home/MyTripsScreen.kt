@@ -56,13 +56,15 @@ fun MyTripsScreen(
     modifier: Modifier = Modifier,
     onTripSelected: (Long) -> Unit = {},
     onAccountClick: () -> Unit = {},
-    onSettingsClick: () -> Unit = {}
+    onSettingsClick: () -> Unit = {},
+    onToggleTheme: () -> Unit = {},
+    isDarkTheme: Boolean = false
 ) {
     var gridLayout by rememberSaveable { mutableStateOf(true) }
     val quickAddLabel = stringResource(R.string.home_quick_add)
     Box(modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         Column(Modifier.fillMaxSize()) {
-            AppHeader(onAccountClick, onSettingsClick)
+            AppHeader(onAccountClick, onSettingsClick, onToggleTheme, isDarkTheme)
             Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp).weight(1f)) {
                 Row(Modifier.fillMaxWidth().height(34.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text(
