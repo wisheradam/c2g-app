@@ -8,6 +8,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import co.check2go.feature.trip.CompletedTrip
 import co.check2go.feature.trip.TripFilter
@@ -29,6 +30,22 @@ class MyTripsScreenTest {
         departureDate = "2026-10-01",
         returnDate = "2026-10-10"
     )
+
+    @Test
+    fun layoutToggleSwitchesBetweenApprovedGridAndListStates() {
+        composeRule.setContent {
+            Check2GoTheme {
+                MyTripsScreen(
+                    trips = listOf(summerTrip), filter = TripFilter.Active,
+                    onFilterChange = {}, onAddTrip = {}, onQuickAdd = {}, onDestinationSelected = {}
+                )
+            }
+        }
+
+        composeRule.onNodeWithTag("trip_grid").assertIsDisplayed()
+        composeRule.onNodeWithTag("trip_layout_toggle").performClick()
+        composeRule.onNodeWithTag("trip_list").assertIsDisplayed()
+    }
 
     @Test
     fun cardShowsTripNameRouteAndDates() {
