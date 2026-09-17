@@ -39,12 +39,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import co.check2go.core.design.AppDestination
 import co.check2go.core.design.AppHeader
 import co.check2go.core.design.AppNavigationBar
+import co.check2go.R
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
@@ -62,6 +65,8 @@ fun DocumentsScreen(
     var sort by remember { mutableStateOf(DocumentSort.Expiration) }
     var sortExpanded by remember { mutableStateOf(false) }
     var deleting by remember { mutableStateOf<TravelDocument?>(null) }
+    val documentContext = LocalContext.current
+    val languageCode = documentContext.resources.configuration.locales[0]?.language
     val expanded = remember { mutableStateMapOf<DocumentCategory, Boolean>() }
     BackHandler { onDestinationSelected(AppDestination.Home) }
 
@@ -77,24 +82,24 @@ fun DocumentsScreen(
             ) {
                 item {
                     Column(Modifier.padding(top = 16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text("Documents", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.SemiBold)
-                        Text("Store and manage your travel documents in one place.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(stringResource(R.string.documents_title), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.SemiBold)
+                        Text(stringResource(R.string.documents_description), color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
                 item {
                     OutlinedTextField(
                         value = query, onValueChange = { query = it }, modifier = Modifier.fillMaxWidth().testTag("documents_search"),
-                        label = { Text("Search documents...") }, singleLine = true
+                        label = { Text(stringResource(R.string.documents_search)) }, singleLine = true
                     )
                 }
                 item {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Button(onClick = { onAddDocument(null, false) }, modifier = Modifier.weight(1f).testTag("documents_add")) { Text("+ Add Document") }
+                        Button(onClick = { onAddDocument(null, false) }, modifier = Modifier.weight(1f).testTag("documents_add")) { Text("+ " + stringResource(R.string.documents_add)) }
                         Box {
-                            OutlinedButton(onClick = { sortExpanded = true }) { Text("Sort: ${sort.label}") }
+                            OutlinedButton(onClick = { sortExpanded = true }) { Text(stringResource(R.string.documents_sort, sort.localizedLabel())) }
                             DropdownMenu(sortExpanded, { sortExpanded = false }) {
                                 DocumentSort.entries.forEach { option ->
-                                    DropdownMenuItem({ Text(option.label) }, { sort = option; sortExpanded = false })
+                                    DropdownMenuItem({ Text(option.localizedLabel()) }, { sort = option; sortExpanded = false })
                                 }
                             }
                         }
@@ -102,7 +107,9 @@ fun DocumentsScreen(
                 }
 
                 DocumentCategory.entries.forEach { category ->
-                    val matches = documents.filter { it.category == category && it.matches(query) }.sortedByDocument(sort)
+                    val matches = documents.filter {
+                        it.category == category && it.matches(query, category.localizedName(documentContext), it.typeName.localizedDocumentTypeName(languageCode))
+                    }.sortedByDocument(sort)
                     val categoryExpanded = if (query.isNotBlank()) matches.isNotEmpty() else expanded[category] == true
                     item(key = "header-${category.name}") {
                         CategoryHeader(category, documents.count { it.category == category }, categoryExpanded) {
@@ -112,7 +119,7 @@ fun DocumentsScreen(
                     if (categoryExpanded) {
                         if (matches.isEmpty()) {
                             item(key = "empty-${category.name}") {
-                                Text("No ${category.displayName.lowercase()} documents added yet.", modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(stringResource(R.string.documents_empty_category, category.localizedName()), modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                         } else {
                             items(matches, key = { it.id }) { document ->
@@ -121,14 +128,14 @@ fun DocumentsScreen(
                         }
                         item(key = "actions-${category.name}") {
                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                TextButton(onClick = { onAddDocument(category, false) }, modifier = Modifier.weight(1f)) { Text("+ Add Document") }
-                                TextButton(onClick = { onAddDocument(category, true) }, modifier = Modifier.weight(1f)) { Text("+ Add Custom Document") }
+                                TextButton(onClick = { onAddDocument(category, false) }, modifier = Modifier.weight(1f)) { Text("+ " + stringResource(R.string.documents_add)) }
+                                TextButton(onClick = { onAddDocument(category, true) }, modifier = Modifier.weight(1f)) { Text("+ " + stringResource(R.string.documents_add_custom)) }
                             }
                         }
                     }
                 }
-                if (query.isNotBlank() && documents.none { it.matches(query) }) {
-                    item { Text("No documents match “$query”.", modifier = Modifier.padding(16.dp), color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                if (query.isNotBlank() && documents.none { it.matches(query, it.category.localizedName(documentContext), it.typeName.localizedDocumentTypeName(languageCode)) }) {
+                    item { Text(stringResource(R.string.documents_no_results, query), modifier = Modifier.padding(16.dp), color = MaterialTheme.colorScheme.onSurfaceVariant) }
                 }
                 item { Spacer(Modifier.height(16.dp)) }
             }
@@ -138,10 +145,10 @@ fun DocumentsScreen(
     deleting?.let { document ->
         AlertDialog(
             onDismissRequest = { deleting = null },
-            title = { Text("Delete document?") },
-            text = { Text("${document.name} and its attachments will be permanently removed from this device.") },
-            confirmButton = { TextButton(onClick = { onDeleteDocument(document); deleting = null }, modifier = Modifier.testTag("document_delete_confirm")) { Text("Delete", color = MaterialTheme.colorScheme.error) } },
-            dismissButton = { TextButton(onClick = { deleting = null }) { Text("Cancel") } }
+            title = { Text(stringResource(R.string.documents_delete_title)) },
+            text = { Text(stringResource(R.string.documents_delete_body, document.name)) },
+            confirmButton = { TextButton(onClick = { onDeleteDocument(document); deleting = null }, modifier = Modifier.testTag("document_delete_confirm")) { Text(stringResource(R.string.common_delete), color = MaterialTheme.colorScheme.error) } },
+            dismissButton = { TextButton(onClick = { deleting = null }) { Text(stringResource(R.string.common_cancel)) } }
         )
     }
 }
@@ -153,7 +160,7 @@ private fun CategoryHeader(category: DocumentCategory, count: Int, expanded: Boo
             Box(Modifier.size(34.dp).background(MaterialTheme.colorScheme.primary.copy(alpha = .1f), CircleShape), contentAlignment = Alignment.Center) {
                 Text(category.icon, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelMedium)
             }
-            Text(category.displayName, Modifier.weight(1f), style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(category.localizedName(), Modifier.weight(1f), style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text("$count", color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text(if (expanded) "▲" else "▼", color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
@@ -173,7 +180,7 @@ private fun DocumentRow(
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(document.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Text(document.customTypeName ?: document.typeName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(document.localizedTypeName(), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 StatusPill(status)
             }
@@ -181,14 +188,14 @@ private fun DocumentRow(
             val end = document.validUntil ?: document.expirationDate
             if (end != null) {
                 val days = ChronoUnit.DAYS.between(LocalDate.now(), end)
-                Text(if (days >= 0) "Expires: $end · $days days" else "Expired: $end", style = MaterialTheme.typography.bodySmall)
+                Text(if (days >= 0) stringResource(R.string.documents_expires, end, days) else stringResource(R.string.documents_expired, end), style = MaterialTheme.typography.bodySmall)
             }
-            if (document.isPrimary) Text("✓ Primary document", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall)
-            if (document.useForTravelRecommendations) Text("✓ Use for travel recommendations", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall)
+            if (document.isPrimary) Text(stringResource(R.string.documents_primary), color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall)
+            if (document.useForTravelRecommendations) Text(stringResource(R.string.documents_recommendations), color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall)
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                document.attachments.firstOrNull()?.let { attachment -> TextButton(onClick = { onOpenAttachment(attachment) }) { Text("View") } }
-                TextButton(onClick = { onEdit(document) }, modifier = Modifier.testTag("document_edit_${document.id}")) { Text(if (document.attachments.isEmpty()) "Edit" else "Edit / Replace file") }
-                TextButton(onClick = onDelete, modifier = Modifier.testTag("document_delete_${document.id}")) { Text("Delete", color = MaterialTheme.colorScheme.error) }
+                document.attachments.firstOrNull()?.let { attachment -> TextButton(onClick = { onOpenAttachment(attachment) }) { Text(stringResource(R.string.common_view)) } }
+                TextButton(onClick = { onEdit(document) }, modifier = Modifier.testTag("document_edit_${document.id}")) { Text(if (document.attachments.isEmpty()) stringResource(R.string.common_edit) else stringResource(R.string.documents_edit_replace)) }
+                TextButton(onClick = onDelete, modifier = Modifier.testTag("document_delete_${document.id}")) { Text(stringResource(R.string.common_delete), color = MaterialTheme.colorScheme.error) }
             }
         }
     }
@@ -203,5 +210,5 @@ private fun StatusPill(status: DocumentStatus) {
         DocumentStatus.Future -> Color(0xFF1565C0)
         DocumentStatus.MissingExpiration -> MaterialTheme.colorScheme.onSurfaceVariant
     }
-    Text(status.label, color = color, style = MaterialTheme.typography.labelSmall, modifier = Modifier.background(color.copy(alpha = .1f), RoundedCornerShape(10.dp)).padding(horizontal = 8.dp, vertical = 4.dp))
+    Text(status.localizedLabel(), color = color, style = MaterialTheme.typography.labelSmall, modifier = Modifier.background(color.copy(alpha = .1f), RoundedCornerShape(10.dp)).padding(horizontal = 8.dp, vertical = 4.dp))
 }

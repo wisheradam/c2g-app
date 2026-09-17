@@ -27,14 +27,14 @@ import androidx.compose.ui.unit.sp
 import co.check2go.R
 
 @Composable
-internal fun AppHeader(onAccountClick: () -> Unit = {}) {
+internal fun AppHeader(onAccountClick: () -> Unit = {}, onSettingsClick: () -> Unit = {}) {
     val iconColor = Color(0xFF8D919A)
     Row(
         modifier = Modifier.fillMaxWidth().height(98.dp).background(Color.White)
             .statusBarsPadding().padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        HeaderIcon(R.drawable.c2g_trophy, iconColor, "Personal account", onAccountClick)
+        HeaderIcon(R.drawable.c2g_trophy, iconColor, stringResource(R.string.personal_account), onAccountClick)
         Spacer(Modifier.weight(1f))
         Text(
             stringResource(R.string.app_name),
@@ -43,7 +43,7 @@ internal fun AppHeader(onAccountClick: () -> Unit = {}) {
             fontWeight = FontWeight.SemiBold
         )
         Spacer(Modifier.weight(1f))
-        HeaderIcon(R.drawable.c2g_settings, iconColor)
+        HeaderIcon(R.drawable.c2g_settings, iconColor, stringResource(R.string.settings_title), onSettingsClick)
         Spacer(Modifier.width(10.dp))
         HeaderIcon(R.drawable.c2g_help, iconColor)
         Spacer(Modifier.width(10.dp))
