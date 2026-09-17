@@ -79,7 +79,7 @@ private fun TravelersHeader(onBack: () -> Unit) {
 @Composable
 private fun TravelersHero() {
     Box(Modifier.fillMaxWidth().height(89.dp).clip(RoundedCornerShape(12.dp))) {
-        Image(painterResource(R.drawable.trip_travelers), null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+        Image(painterResource(R.drawable.trip_travelers_generated), null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
         Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(listOf(Color.Black.copy(.55f), Color.Transparent))))
         Column(Modifier.align(Alignment.CenterStart).padding(start = 16.dp)) {
             Text("Step 2/2", color = Color(0xFFF4F7FA), fontSize = 22.sp, lineHeight = 26.sp, fontWeight = FontWeight.SemiBold)

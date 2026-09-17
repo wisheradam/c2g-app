@@ -46,6 +46,8 @@ import co.check2go.feature.trip.TripDatesDraft
 import co.check2go.feature.trip.TripDestinationDraft
 import co.check2go.feature.trip.TripFilter
 import co.check2go.feature.trip.TripTravelersDraft
+import co.check2go.feature.trip.MyTravelersScreen
+import co.check2go.feature.trip.TravelerEditorScreen
 
 private enum class AppScreen {
     Home,
@@ -57,7 +59,9 @@ private enum class AppScreen {
     TripDestination,
     TripDates,
     ReminderPicker,
-    TripTravelers
+    TripTravelers,
+    MyTravelers,
+    TravelerEditor
 }
 
 /**
@@ -97,6 +101,7 @@ fun Check2GoApp(
 
     var adventureType by rememberSaveable { mutableStateOf(TripAdventureType.Solo) }
     var petsIncluded by rememberSaveable { mutableStateOf(false) }
+    var travelerName by rememberSaveable { mutableStateOf<String?>(null) }
 
     var trips by rememberSaveable(stateSaver = CompletedTripListSaver) {
         mutableStateOf(emptyList<CompletedTrip>())
@@ -524,7 +529,7 @@ fun Check2GoApp(
                 onAdventureTypeChange = { adventureType = it },
                 petsIncluded = petsIncluded,
                 onPetsIncludedChange = { petsIncluded = it },
-                onAddTraveler = {},
+                onAddTraveler = { screen = AppScreen.MyTravelers },
                 onBack = navigateToDates,
                 onComplete = {
                     val destinationDraft = TripDestinationDraft(
@@ -562,6 +567,30 @@ fun Check2GoApp(
                     screen = AppScreen.Home
 
                     onTripCreateComplete(destinationDraft, datesDraft, travelersDraft)
+                }
+            )
+        }
+
+        AppScreen.MyTravelers -> {
+            val back = { screen = AppScreen.TripTravelers }
+            BackHandler(onBack = back)
+            MyTravelersScreen(
+                name = travelerName,
+                onBack = back,
+                onAdd = { screen = AppScreen.TravelerEditor },
+                onEdit = { screen = AppScreen.TravelerEditor }
+            )
+        }
+
+        AppScreen.TravelerEditor -> {
+            val back = { screen = AppScreen.MyTravelers }
+            BackHandler(onBack = back)
+            TravelerEditorScreen(
+                initialName = travelerName.orEmpty(),
+                onBack = back,
+                onSave = {
+                    travelerName = it
+                    screen = AppScreen.MyTravelers
                 }
             )
         }
