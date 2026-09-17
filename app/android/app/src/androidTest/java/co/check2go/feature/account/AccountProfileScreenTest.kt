@@ -39,13 +39,20 @@ class AccountProfileScreenTest {
     fun invalidDateIsShownAndDoesNotSave() {
         var saved: PersonalAccount? = null
         compose.setContent {
-            Check2GoTheme { AccountProfileScreen(PersonalAccount(), {}, { saved = it }, LocalDate.of(2026, 1, 1)) }
+            Check2GoTheme {
+                AccountProfileScreen(
+                    account = PersonalAccount(),
+                    onBack = {},
+                    onSave = { saved = it },
+                    referenceDate = LocalDate.of(2026, 1, 1)
+                )
+            }
         }
 
         compose.onNodeWithText("First name").performTextInput("Ada")
         compose.onNodeWithText("Last name").performTextInput("Lovelace")
         compose.onNodeWithText("Date of birth (YYYY-MM-DD)").performTextInput("tomorrow")
-        compose.onNodeWithTag("account_profile").performScrollToIndex(20)
+        compose.onNodeWithTag("account_profile").performScrollToIndex(21)
         compose.onNodeWithTag("account_save").performClick()
 
         compose.onNodeWithText("Use date format YYYY-MM-DD").assertIsDisplayed()

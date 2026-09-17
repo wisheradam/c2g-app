@@ -37,6 +37,7 @@ import co.check2go.feature.checklists.withSectionRenamed
 import co.check2go.feature.checklists.ShareChecklistScreen
 import co.check2go.feature.account.AccountProfileScreen
 import co.check2go.feature.account.PersonalAccount
+import co.check2go.feature.account.FamilyMembersScreen
 import co.check2go.feature.home.HomeEmptyScreen
 import co.check2go.feature.home.MyTripsScreen
 import co.check2go.feature.events.EventCalendarScreen
@@ -71,7 +72,8 @@ private enum class AppScreen {
     TravelerEditor,
     TripHub,
     EventsCalendar,
-    AccountProfile
+    AccountProfile,
+    FamilyMembers
 }
 
 /**
@@ -246,7 +248,16 @@ fun Check2GoApp(
                 onSave = {
                     personalAccount = it
                     screen = AppScreen.Home
-                }
+                },
+                onManageFamily = { screen = AppScreen.FamilyMembers }
+            )
+        }
+
+        AppScreen.FamilyMembers -> {
+            FamilyMembersScreen(
+                account = personalAccount,
+                onAccountChange = { personalAccount = it },
+                onBack = { screen = AppScreen.AccountProfile }
             )
         }
 
