@@ -98,6 +98,21 @@ class ChecklistCreateScreenTest {
     val composeRule = createComposeRule()
 
     @Test
+    fun replacePhotoOpensApprovedPhotoActions() {
+        val result = HarnessResult()
+        composeRule.setContent {
+            Check2GoTheme { ChecklistCreateHarness(result) }
+        }
+
+        composeRule.onNodeWithTag("checklist_replace_photo").performClick()
+
+        composeRule.onNodeWithTag("checklist_photo_sheet").assertIsDisplayed()
+        composeRule.onNodeWithText("Choose from gallery").assertIsDisplayed()
+        composeRule.onNodeWithText("Make a photo").assertIsDisplayed()
+        composeRule.onNodeWithText("Delete photo").assertIsDisplayed()
+    }
+
+    @Test
     fun enteringNameUpdatesTheDraftShownOnScreen() {
         val result = HarnessResult()
         composeRule.setContent {
