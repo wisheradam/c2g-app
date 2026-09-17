@@ -40,13 +40,14 @@ fun ChecklistDetailScreen(
     onEditChecklist: () -> Unit,
     onDuplicateChecklist: () -> Unit,
     onBack: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onShareChecklist: () -> Unit = {}
 ) {
     val percent = checklist.completionPercent()
     Scaffold(
         modifier = modifier.fillMaxSize(), containerColor = Color(0xFFF4F7FA),
         topBar = { ChecklistDetailHeader(checklist.name, onBack) },
-        bottomBar = { ChecklistDetailBottom(percent) }
+        bottomBar = { ChecklistDetailBottom(percent, onShareChecklist) }
     ) { padding ->
         Column(
             Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())
@@ -142,7 +143,7 @@ private fun DetailAction(icon: String, label: String, onClick: () -> Unit, color
 }
 
 @Composable
-private fun ChecklistDetailBottom(percent: Int) {
+private fun ChecklistDetailBottom(percent: Int, onShareChecklist: () -> Unit) {
     Column(Modifier.fillMaxWidth().background(Color.White), horizontalAlignment = Alignment.CenterHorizontally) {
         Box(Modifier.fillMaxWidth().height(4.dp).background(Color(0xFFE1E4E8))) {
             Box(Modifier.fillMaxHeight().fillMaxWidth(percent / 100f).background(if (percent == 100) Color(0xFF2FC768) else Color(0xFFC23C68)))
@@ -150,7 +151,8 @@ private fun ChecklistDetailBottom(percent: Int) {
         Text(stringResource(R.string.checklists_completion_format, percent), Modifier.testTag("checklist_detail_completion"), color = Color(0xFF8D919A), fontSize = 14.sp)
         Box(
             Modifier.padding(horizontal = 16.dp, vertical = 10.dp).fillMaxWidth().height(50.dp)
-                .clip(RoundedCornerShape(10.dp)).background(Color(0xFF043CB3)), contentAlignment = Alignment.Center
+                .clip(RoundedCornerShape(10.dp)).background(Color(0xFF043CB3))
+                .clickable(onClick = onShareChecklist).testTag("share_checklist_action"), contentAlignment = Alignment.Center
         ) { Text("↗  Share checklist", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.SemiBold) }
         Spacer(Modifier.navigationBarsPadding())
     }
