@@ -1,25 +1,20 @@
 package co.check2go.feature.checklists
 
-import androidx.compose.foundation.border
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -29,22 +24,13 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import co.check2go.R
 import co.check2go.core.design.AppDestination
 import co.check2go.core.design.AppNavigationBar
 import co.check2go.ui.theme.Check2GoTheme
 
-/**
- * Shared screen ID: CHECKLISTS_POPULATED (docs/flows.md Flow 5, step 4;
- * docs/screen-inventory.md "Checklists — main tab > Populated list").
- *
- * Stateless: shows each checklist's name, a neutral personal context (trip linkage is out of
- * scope, see [CompletedChecklist]) and its calculated completion percentage
- * ([completionPercent]). Tapping a row invokes [onChecklistSelected] to open CHECKLIST_DETAIL.
- * Assumes [checklists] is non-empty; the caller shows [ChecklistsEmptyScreen] instead while there
- * are none.
- */
-@OptIn(ExperimentalMaterial3Api::class)
+/** Approved Figma CHECKLISTS_POPULATED state 1:28596. */
 @Composable
 fun ChecklistsPopulatedScreen(
     checklists: List<CompletedChecklist>,
@@ -55,113 +41,67 @@ fun ChecklistsPopulatedScreen(
     modifier: Modifier = Modifier
 ) {
     val quickAddLabel = stringResource(R.string.home_quick_add)
-
     Scaffold(
-        modifier = modifier.fillMaxSize(),
-        containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = stringResource(R.string.checklists_title),
-                        fontWeight = FontWeight.SemiBold
-                    )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    titleContentColor = MaterialTheme.colorScheme.onBackground
-                )
-            )
-        },
-        bottomBar = {
-            AppNavigationBar(
-                selected = AppDestination.Checklists,
-                onDestinationSelected = onDestinationSelected
-            )
-        },
+        modifier = modifier.fillMaxSize(), containerColor = Color(0xFFF4F7FA),
+        topBar = { ChecklistsHeader() },
+        bottomBar = { AppNavigationBar(AppDestination.Checklists, onDestinationSelected) },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = onQuickAdd,
-                shape = CircleShape,
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-                modifier = Modifier.semantics {
-                    contentDescription = quickAddLabel
-                    role = Role.Button
-                }
-            ) {
-                Text(text = "+", style = MaterialTheme.typography.headlineMedium)
-            }
+                onClick = onQuickAdd, shape = CircleShape,
+                containerColor = Color(0xFF043CB3), contentColor = Color.White,
+                modifier = Modifier.size(56.dp).semantics { contentDescription = quickAddLabel; role = Role.Button }
+            ) { Text("+", fontSize = 29.sp, fontWeight = FontWeight.Light) }
         }
-    ) { contentPadding ->
+    ) { padding ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(contentPadding)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp, vertical = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp, vertical = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Button(onClick = onCreateChecklist, modifier = Modifier.fillMaxWidth()) {
-                Text(text = stringResource(R.string.checklists_create_checklist))
+            checklists.forEachIndexed { index, checklist ->
+                ChecklistCard(checklist, index, { onChecklistSelected(checklist.id) })
             }
-            checklists.forEach { checklist ->
-                ChecklistCard(checklist = checklist, onClick = { onChecklistSelected(checklist.id) })
-            }
+            CreateChecklistButton(onCreateChecklist, Modifier.padding(top = 8.dp))
+            TeamChecklistsPromo(Modifier.padding(top = 32.dp, bottom = 16.dp))
         }
     }
 }
 
 @Composable
-private fun ChecklistCard(checklist: CompletedChecklist, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
+private fun ChecklistCard(checklist: CompletedChecklist, index: Int, onClick: () -> Unit) {
+    val percent = checklist.completionPercent()
+    val progressColor = when {
+        percent == 100 -> Color(0xFFCCE8E4)
+        index % 2 == 0 -> Color(0xFFE7D7E5)
+        else -> Color(0xFFCAD8EF)
+    }
+    Box(
+        Modifier.fillMaxWidth().height(52.dp).clip(RoundedCornerShape(12.dp))
+            .background(Color.White).clickable(onClickLabel = checklist.name, onClick = onClick)
             .testTag("checklist_card_${checklist.id}")
-            .border(1.dp, MaterialTheme.colorScheme.onSurfaceVariant)
-            .clickable(onClickLabel = checklist.name, onClick = onClick)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        Text(
-            text = checklist.name,
-            color = MaterialTheme.colorScheme.onBackground,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold
+        if (percent > 0) Box(
+            Modifier.fillMaxHeight().fillMaxWidth(percent / 100f).background(progressColor)
         )
+        Column(Modifier.align(Alignment.CenterStart).padding(horizontal = 10.dp)) {
+            Text(checklist.name, color = Color(0xFF002349), fontSize = 15.sp, lineHeight = 18.sp)
+            Text(stringResource(R.string.checklists_personal_context), color = Color(0xFF8D919A), fontSize = 12.sp)
+        }
         Text(
-            text = stringResource(R.string.checklists_personal_context),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.bodySmall
-        )
-        Text(
-            text = stringResource(R.string.checklists_completion_format, checklist.completionPercent()),
-            color = MaterialTheme.colorScheme.primary,
-            style = MaterialTheme.typography.labelMedium
+            stringResource(R.string.checklists_completion_format, percent),
+            Modifier.align(Alignment.CenterEnd).padding(end = 10.dp),
+            color = Color(0xFF043CB3), fontSize = 12.sp
         )
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, widthDp = 393, heightDp = 852)
 @Composable
-private fun ChecklistsPopulatedPreview() {
-    Check2GoTheme(darkTheme = false) {
-        ChecklistsPopulatedScreen(
-            checklists = listOf(
-                CompletedChecklist(
-                    id = 1L,
-                    name = "Before leaving",
-                    items = listOf(
-                        SavedChecklistItem(id = 1L, name = "Passport", sectionId = null, includeFile = true, completed = true),
-                        SavedChecklistItem(id = 2L, name = "Charger", sectionId = null, includeFile = false, completed = false)
-                    )
-                ),
-                CompletedChecklist(id = 2L, name = "Documents")
-            ),
-            onCreateChecklist = {},
-            onQuickAdd = {},
-            onChecklistSelected = {},
-            onDestinationSelected = {}
-        )
-    }
+private fun ChecklistsPopulatedPreview() = Check2GoTheme(false) {
+    ChecklistsPopulatedScreen(
+        listOf(
+            CompletedChecklist(1L, "Before leaving"),
+            CompletedChecklist(2L, "Documents")
+        ), {}, {}, {}, {}
+    )
 }
