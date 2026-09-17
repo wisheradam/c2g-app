@@ -18,6 +18,7 @@ import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -31,11 +32,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -60,7 +63,7 @@ import co.check2go.ui.theme.Check2GoTheme
  * composable; all other caller-side differences (draft seeding, where "Save changes" writes to)
  * live in `Check2GoApp`.
  *
- * Out of scope for this task: checklist photo, real file attachment, trip linkage, Use now, and
+ * Out of scope for this task: real file attachment, trip linkage, Use now, and
  * share/delete (docs/screen-inventory.md "Create / Edit Checklist" lists these, but the task scope
  * excludes them here). "Duplicate checklist" (docs/flows.md Flow 9) is in scope but only meaningful
  * once something is actually saved to duplicate, so [onDuplicateChecklist] is nullable and the
@@ -105,6 +108,7 @@ fun ChecklistCreateScreen(
     title: String = stringResource(R.string.checklist_create_title),
     onDuplicateChecklist: (() -> Unit)? = null
 ) {
+    var showPhotoSheet by rememberSaveable { mutableStateOf(false) }
     val canSave = draft.name.isNotBlank() &&
         draft.sections.all { it.name.isNotBlank() } &&
         draft.items.all { it.name.isNotBlank() }
@@ -124,6 +128,25 @@ fun ChecklistCreateScreen(
                 .padding(horizontal = 16.dp, vertical = 24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            Column(
+                Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.trip_destination_malaga),
+                    contentDescription = null,
+                    modifier = Modifier.size(44.dp).clip(RoundedCornerShape(4.dp)),
+                    contentScale = ContentScale.Crop
+                )
+                Text(
+                    text = "Replace photo",
+                    modifier = Modifier.padding(top = 8.dp).clickable { showPhotoSheet = true }
+                        .testTag("checklist_replace_photo"),
+                    color = Color(0xFF043CB3),
+                    fontSize = 16.sp
+                )
+            }
+
             Column(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Color.White).padding(10.dp)
             ) {
@@ -188,6 +211,63 @@ fun ChecklistCreateScreen(
                 Text(stringResource(R.string.checklist_save), color = Color.White, fontSize = 16.sp)
             }
         }
+    }
+
+    if (showPhotoSheet) {
+        ChecklistReplacePhotoSheet(onDismiss = { showPhotoSheet = false })
+    }
+}
+
+/** Approved Figma checklist photo sheet 1:28396. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ChecklistReplacePhotoSheet(onDismiss: () -> Unit) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = Color.White,
+        shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
+        dragHandle = {
+            Box(
+                Modifier.padding(top = 10.dp, bottom = 18.dp).size(40.dp, 4.dp)
+                    .clip(RoundedCornerShape(2.dp)).background(Color.White)
+            )
+        },
+        modifier = Modifier.testTag("checklist_photo_sheet")
+    ) {
+        Column(
+            Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 18.dp, vertical = 4.dp)
+        ) {
+            Text(
+                "Replace photo",
+                Modifier.fillMaxWidth(),
+                color = Color(0xFF002349),
+                fontSize = 20.sp,
+                fontWeight = FontWeight.SemiBold,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
+            Image(
+                painterResource(R.drawable.trip_destination_malaga),
+                null,
+                Modifier.padding(top = 16.dp).align(Alignment.CenterHorizontally).size(44.dp)
+                    .clip(RoundedCornerShape(4.dp)),
+                contentScale = ContentScale.Crop
+            )
+            HorizontalDivider(Modifier.padding(vertical = 16.dp), color = Color(0xFFF0F1F3))
+            ChecklistPhotoAction("▧", "Choose from gallery", Color(0xFF002349), "checklist_photo_gallery")
+            Spacer(Modifier.height(20.dp))
+            ChecklistPhotoAction("▣", "Make a photo", Color(0xFF002349), "checklist_photo_camera")
+            Spacer(Modifier.height(20.dp))
+            ChecklistPhotoAction("♙", "Delete photo", Color(0xFFC23C68), "checklist_photo_delete")
+            Spacer(Modifier.height(20.dp))
+        }
+    }
+}
+
+@Composable
+private fun ChecklistPhotoAction(icon: String, label: String, color: Color, tag: String) {
+    Row(Modifier.fillMaxWidth().height(28.dp).testTag(tag), verticalAlignment = Alignment.CenterVertically) {
+        Text(icon, color = color, fontSize = 20.sp, modifier = Modifier.width(30.dp))
+        Text(label, color = color, fontSize = 17.sp)
     }
 }
 

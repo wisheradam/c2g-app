@@ -4,6 +4,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items as lazyItems
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -12,12 +14,17 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -49,6 +56,7 @@ fun MyTripsScreen(
     modifier: Modifier = Modifier,
     onTripSelected: (Long) -> Unit = {}
 ) {
+    var gridLayout by rememberSaveable { mutableStateOf(true) }
     val quickAddLabel = stringResource(R.string.home_quick_add)
     Box(modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         Column(Modifier.fillMaxSize()) {
@@ -64,17 +72,31 @@ fun MyTripsScreen(
                     FilterControl(filter, onFilterChange)
                     Spacer(Modifier.width(8.dp))
                     Box(
-                        Modifier.size(34.dp).clip(RoundedCornerShape(9.dp)).background(Color.White),
+                        Modifier.size(34.dp).clip(RoundedCornerShape(9.dp)).background(Color.White)
+                            .clickable { gridLayout = !gridLayout }.testTag("trip_layout_toggle"),
                         contentAlignment = Alignment.Center
-                    ) { Text("☰", color = Color(0xFF043CB3), fontSize = 20.sp) }
+                    ) { Text(if (gridLayout) "☰" else "▦", color = Color(0xFF043CB3), fontSize = 20.sp) }
                 }
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.fillMaxWidth().padding(top = 16.dp).heightIn(max = 316.dp)
-                ) {
-                    items(trips, key = { it.id }) { TripCard(it) { onTripSelected(it.id) } }
+                if (gridLayout) {
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(2),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth().padding(top = 16.dp).heightIn(max = 316.dp)
+                            .testTag("trip_grid")
+                    ) {
+                        items(trips, key = { it.id }) { TripCard(it) { onTripSelected(it.id) } }
+                    }
+                } else {
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth().padding(top = 16.dp).heightIn(max = 316.dp)
+                            .testTag("trip_list")
+                    ) {
+                        lazyItems(trips, key = { it.id }) { trip ->
+                            TripListCard(trip) { onTripSelected(trip.id) }
+                        }
+                    }
                 }
                 Box(
                     Modifier.padding(top = 16.dp).fillMaxWidth().height(52.dp)
@@ -93,6 +115,45 @@ fun MyTripsScreen(
                 .semantics { contentDescription = quickAddLabel; role = Role.Button }
                 .clickable(onClick = onQuickAdd), contentAlignment = Alignment.Center
         ) { Text("+", color = Color.White, fontSize = 30.sp, fontWeight = FontWeight.Light) }
+    }
+}
+
+/** Approved Figma one-column trip card states 1:27854, 1:27885 and 1:27916. */
+@Composable
+private fun TripListCard(trip: CompletedTrip, onClick: () -> Unit) {
+    Box(
+        Modifier.fillMaxWidth().height(154.dp).clip(RoundedCornerShape(14.dp))
+            .clickable(onClick = onClick)
+    ) {
+        Image(
+            painterResource(R.drawable.trip_city_tel_aviv),
+            null,
+            Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
+        Box(
+            Modifier.fillMaxSize().background(
+                Brush.verticalGradient(
+                    listOf(Color.Transparent, Color.Black.copy(alpha = .72f)),
+                    startY = 55f
+                )
+            )
+        )
+        Text(
+            stringResource(R.string.trip_filter_active),
+            Modifier.padding(16.dp).clip(RoundedCornerShape(12.dp)).background(Color(0xFFD5F7FA))
+                .padding(horizontal = 8.dp, vertical = 4.dp),
+            color = Color(0xFF007B83), fontSize = 12.sp
+        )
+        Column(Modifier.align(Alignment.BottomStart).padding(16.dp)) {
+            Text(trip.tripName, color = Color.White, fontSize = 18.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(trip.datesLabel(), color = Color.White, fontSize = 14.sp)
+        }
+        Box(
+            Modifier.align(Alignment.BottomEnd).padding(16.dp).size(36.dp)
+                .clip(RoundedCornerShape(10.dp)).background(Color.White),
+            contentAlignment = Alignment.Center
+        ) { Text("›", color = Color(0xFF043CB3), fontSize = 25.sp) }
     }
 }
 
