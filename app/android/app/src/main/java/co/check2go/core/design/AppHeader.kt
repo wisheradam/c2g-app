@@ -2,6 +2,7 @@ package co.check2go.core.design
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -26,14 +27,14 @@ import androidx.compose.ui.unit.sp
 import co.check2go.R
 
 @Composable
-internal fun AppHeader() {
+internal fun AppHeader(onAccountClick: () -> Unit = {}) {
     val iconColor = Color(0xFF8D919A)
     Row(
         modifier = Modifier.fillMaxWidth().height(98.dp).background(Color.White)
             .statusBarsPadding().padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        HeaderIcon(R.drawable.c2g_trophy, iconColor)
+        HeaderIcon(R.drawable.c2g_trophy, iconColor, "Personal account", onAccountClick)
         Spacer(Modifier.weight(1f))
         Text(
             stringResource(R.string.app_name),
@@ -57,11 +58,18 @@ internal fun AppHeader() {
 }
 
 @Composable
-private fun HeaderIcon(resourceId: Int, color: Color) {
+private fun HeaderIcon(
+    resourceId: Int,
+    color: Color,
+    contentDescription: String? = null,
+    onClick: (() -> Unit)? = null
+) {
     Image(
         painter = painterResource(resourceId),
-        contentDescription = null,
+        contentDescription = contentDescription,
         colorFilter = ColorFilter.tint(color),
-        modifier = Modifier.size(24.dp)
+        modifier = Modifier.size(24.dp).then(
+            if (onClick == null) Modifier else Modifier.clickable(onClick = onClick)
+        )
     )
 }

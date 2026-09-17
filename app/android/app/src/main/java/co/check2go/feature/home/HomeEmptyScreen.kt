@@ -37,13 +37,14 @@ fun HomeEmptyScreen(
     onAddTrip: () -> Unit,
     onQuickAdd: () -> Unit,
     onDestinationSelected: (AppDestination) -> Unit,
+    onAccountClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val quickAddLabel = stringResource(R.string.home_quick_add)
 
     Box(modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         Column(Modifier.fillMaxSize()) {
-            AppHeader()
+            AppHeader(onAccountClick)
 
             Box(
                 Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp).fillMaxWidth().height(183.dp)

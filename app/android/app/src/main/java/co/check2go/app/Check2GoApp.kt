@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
@@ -34,6 +35,9 @@ import co.check2go.feature.checklists.withSectionAdded
 import co.check2go.feature.checklists.withSectionRemoved
 import co.check2go.feature.checklists.withSectionRenamed
 import co.check2go.feature.checklists.ShareChecklistScreen
+import co.check2go.feature.account.AccountProfileScreen
+import co.check2go.feature.account.PersonalAccount
+import co.check2go.feature.account.FamilyMembersScreen
 import co.check2go.feature.home.HomeEmptyScreen
 import co.check2go.feature.home.MyTripsScreen
 import co.check2go.feature.events.EventCalendarScreen
@@ -67,7 +71,9 @@ private enum class AppScreen {
     MyTravelers,
     TravelerEditor,
     TripHub,
-    EventsCalendar
+    EventsCalendar,
+    AccountProfile,
+    FamilyMembers
 }
 
 /**
@@ -86,6 +92,7 @@ fun Check2GoApp(
     onChecklistCreated: (ChecklistDraft) -> Unit = {}
 ) {
     var screen by rememberSaveable { mutableStateOf(AppScreen.Home) }
+    var personalAccount by remember { mutableStateOf(PersonalAccount()) }
 
     var destinationCountry by rememberSaveable { mutableStateOf("") }
     var departureCountry by rememberSaveable { mutableStateOf("") }
@@ -214,7 +221,8 @@ fun Check2GoApp(
                 HomeEmptyScreen(
                     onAddTrip = startNewTripDraft,
                     onQuickAdd = startNewTripDraft,
-                    onDestinationSelected = onAppDestinationSelected
+                    onDestinationSelected = onAppDestinationSelected,
+                    onAccountClick = { screen = AppScreen.AccountProfile }
                 )
             } else {
                 MyTripsScreen(
@@ -227,9 +235,30 @@ fun Check2GoApp(
                     onTripSelected = {
                         selectedTripId = it
                         screen = AppScreen.TripHub
-                    }
+                    },
+                    onAccountClick = { screen = AppScreen.AccountProfile }
                 )
             }
+        }
+
+        AppScreen.AccountProfile -> {
+            AccountProfileScreen(
+                account = personalAccount,
+                onBack = { screen = AppScreen.Home },
+                onSave = {
+                    personalAccount = it
+                    screen = AppScreen.Home
+                },
+                onManageFamily = { screen = AppScreen.FamilyMembers }
+            )
+        }
+
+        AppScreen.FamilyMembers -> {
+            FamilyMembersScreen(
+                account = personalAccount,
+                onAccountChange = { personalAccount = it },
+                onBack = { screen = AppScreen.AccountProfile }
+            )
         }
 
         AppScreen.TripHub -> {
