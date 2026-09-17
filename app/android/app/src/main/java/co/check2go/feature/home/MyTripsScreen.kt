@@ -46,7 +46,8 @@ fun MyTripsScreen(
     onAddTrip: () -> Unit,
     onQuickAdd: () -> Unit,
     onDestinationSelected: (AppDestination) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onTripSelected: (Long) -> Unit = {}
 ) {
     val quickAddLabel = stringResource(R.string.home_quick_add)
     Box(modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
@@ -73,7 +74,7 @@ fun MyTripsScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.fillMaxWidth().padding(top = 16.dp).heightIn(max = 316.dp)
                 ) {
-                    items(trips, key = { it.id }) { TripCard(it) }
+                    items(trips, key = { it.id }) { TripCard(it) { onTripSelected(it.id) } }
                 }
                 Box(
                     Modifier.padding(top = 16.dp).fillMaxWidth().height(52.dp)
@@ -113,8 +114,8 @@ private fun FilterButton(label: String, selected: Boolean, modifier: Modifier, o
 }
 
 @Composable
-private fun TripCard(trip: CompletedTrip) {
-    Box(Modifier.fillMaxWidth().height(154.dp).clip(RoundedCornerShape(12.dp))) {
+private fun TripCard(trip: CompletedTrip, onClick: () -> Unit) {
+    Box(Modifier.fillMaxWidth().height(154.dp).clip(RoundedCornerShape(12.dp)).clickable(onClick = onClick)) {
         Image(painterResource(R.drawable.trip_city_tel_aviv), null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
         Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = .75f)), startY = 55f)))
         Text(
