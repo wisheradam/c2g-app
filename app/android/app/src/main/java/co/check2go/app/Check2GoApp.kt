@@ -36,6 +36,7 @@ import co.check2go.feature.checklists.withSectionRenamed
 import co.check2go.feature.checklists.ShareChecklistScreen
 import co.check2go.feature.home.HomeEmptyScreen
 import co.check2go.feature.home.MyTripsScreen
+import co.check2go.feature.events.EventCalendarScreen
 import co.check2go.feature.trip.CompletedTrip
 import co.check2go.feature.trip.CompletedTripListSaver
 import co.check2go.feature.trip.ReminderPickerScreen
@@ -65,7 +66,8 @@ private enum class AppScreen {
     TripTravelers,
     MyTravelers,
     TravelerEditor,
-    TripHub
+    TripHub,
+    EventsCalendar
 }
 
 /**
@@ -196,13 +198,13 @@ fun Check2GoApp(
         screen = AppScreen.ChecklistDuplicateConfirmation
     }
 
-    // Documents/Events have no DOCUMENTS_HOME/EVENTS_HOME screen yet (docs/screen-inventory.md),
-    // so selecting them is a no-op boundary rather than switching to a fake screen.
+    // Documents has no approved standalone screen yet. Events opens the approved calendar sheet.
     val onAppDestinationSelected: (AppDestination) -> Unit = { destination ->
         when (destination) {
             AppDestination.Home -> screen = AppScreen.Home
             AppDestination.Checklists -> screen = AppScreen.Checklists
-            AppDestination.Documents, AppDestination.Events -> {}
+            AppDestination.Documents -> {}
+            AppDestination.Events -> screen = AppScreen.EventsCalendar
         }
     }
 
@@ -237,6 +239,15 @@ fun Check2GoApp(
                 trip = trips.first { it.id == selectedTripId },
                 onBack = back,
                 onCreateChecklist = { screen = AppScreen.ChecklistCreate }
+            )
+        }
+
+        AppScreen.EventsCalendar -> {
+            val back = { screen = AppScreen.Home }
+            BackHandler(onBack = back)
+            EventCalendarScreen(
+                onBack = back,
+                onSave = { screen = AppScreen.Home }
             )
         }
 
