@@ -5,10 +5,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsOff
+import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import co.check2go.ui.theme.Check2GoTheme
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -30,7 +34,9 @@ class TripCreateDatesScreenTest {
                     returnDate = "",
                     onReturnDateChange = {},
                     reminderEnabled = false,
-                    onReminderEnabledChange = {},
+                    reminderSummary = null,
+                    onOpenReminderPicker = {},
+                    onReminderDisabled = {},
                     onLoadTicket = {},
                     onBack = {},
                     onNextStep = {}
@@ -61,7 +67,9 @@ class TripCreateDatesScreenTest {
                     returnDate = "",
                     onReturnDateChange = {},
                     reminderEnabled = true,
-                    onReminderEnabledChange = {},
+                    reminderSummary = "Reminder: 2026-10-01 at 09:00",
+                    onOpenReminderPicker = {},
+                    onReminderDisabled = {},
                     onLoadTicket = { ticketRequested = true },
                     onBack = {},
                     onNextStep = { nextStepRequested = true }
@@ -89,7 +97,9 @@ class TripCreateDatesScreenTest {
                     returnDate = "",
                     onReturnDateChange = {},
                     reminderEnabled = false,
-                    onReminderEnabledChange = {},
+                    reminderSummary = null,
+                    onOpenReminderPicker = {},
+                    onReminderDisabled = {},
                     onLoadTicket = {},
                     onBack = { backRequested = true },
                     onNextStep = {}
@@ -100,5 +110,122 @@ class TripCreateDatesScreenTest {
         composeRule.onNodeWithText("Back").performClick()
 
         assertTrue(backRequested)
+    }
+
+    @Test
+    fun turningReminderControlOnRequestsThePickerWithoutEnablingItDirectly() {
+        var pickerRequested = false
+        composeRule.setContent {
+            Check2GoTheme {
+                TripCreateDatesScreen(
+                    oneWay = false,
+                    onOneWayChange = {},
+                    departureDate = "",
+                    onDepartureDateChange = {},
+                    returnDate = "",
+                    onReturnDateChange = {},
+                    reminderEnabled = false,
+                    reminderSummary = null,
+                    onOpenReminderPicker = { pickerRequested = true },
+                    onReminderDisabled = {},
+                    onLoadTicket = {},
+                    onBack = {},
+                    onNextStep = {}
+                )
+            }
+        }
+
+        composeRule.onNodeWithTag("trip_reminder_toggle").assertIsOff()
+        composeRule.onNodeWithTag("trip_reminder_toggle").performClick()
+
+        assertTrue(pickerRequested)
+        // The screen's own state (reminderEnabled) is unchanged here -- enabling only happens once
+        // the caller confirms a reminder in the picker and passes reminderEnabled = true back down.
+        composeRule.onNodeWithTag("trip_reminder_toggle").assertIsOff()
+    }
+
+    @Test
+    fun turningReminderControlOffWhenEnabledDisablesItDirectlyWithoutOpeningThePicker() {
+        var pickerRequested = false
+        var disabled = false
+        composeRule.setContent {
+            Check2GoTheme {
+                TripCreateDatesScreen(
+                    oneWay = false,
+                    onOneWayChange = {},
+                    departureDate = "",
+                    onDepartureDateChange = {},
+                    returnDate = "",
+                    onReturnDateChange = {},
+                    reminderEnabled = true,
+                    reminderSummary = "Reminder: 2026-10-01 at 09:00",
+                    onOpenReminderPicker = { pickerRequested = true },
+                    onReminderDisabled = { disabled = true },
+                    onLoadTicket = {},
+                    onBack = {},
+                    onNextStep = {}
+                )
+            }
+        }
+
+        composeRule.onNodeWithTag("trip_reminder_toggle").assertIsOn()
+        composeRule.onNodeWithTag("trip_reminder_toggle").performClick()
+
+        assertTrue(disabled)
+        assertFalse(pickerRequested)
+    }
+
+    @Test
+    fun reminderSummaryAndEditActionAreOnlyShownWhenEnabled() {
+        composeRule.setContent {
+            Check2GoTheme {
+                TripCreateDatesScreen(
+                    oneWay = false,
+                    onOneWayChange = {},
+                    departureDate = "",
+                    onDepartureDateChange = {},
+                    returnDate = "",
+                    onReturnDateChange = {},
+                    reminderEnabled = false,
+                    reminderSummary = null,
+                    onOpenReminderPicker = {},
+                    onReminderDisabled = {},
+                    onLoadTicket = {},
+                    onBack = {},
+                    onNextStep = {}
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("Edit").assertDoesNotExist()
+    }
+
+    @Test
+    fun editActionOnAnEnabledReminderRequestsThePicker() {
+        var pickerRequested = false
+        composeRule.setContent {
+            Check2GoTheme {
+                TripCreateDatesScreen(
+                    oneWay = false,
+                    onOneWayChange = {},
+                    departureDate = "",
+                    onDepartureDateChange = {},
+                    returnDate = "",
+                    onReturnDateChange = {},
+                    reminderEnabled = true,
+                    reminderSummary = "Reminder: 2026-10-01 at 09:00",
+                    onOpenReminderPicker = { pickerRequested = true },
+                    onReminderDisabled = {},
+                    onLoadTicket = {},
+                    onBack = {},
+                    onNextStep = {}
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("Reminder: 2026-10-01 at 09:00").assertIsDisplayed()
+        composeRule.onNodeWithText("Edit").performClick()
+
+        assertTrue(pickerRequested)
     }
 }

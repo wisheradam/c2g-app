@@ -95,6 +95,149 @@ class Check2GoAppTest {
     }
 
     @Test
+    fun openingTravelReminderTogglesNavigatesToTheReminderPicker() {
+        composeRule.setContent {
+            Check2GoTheme {
+                Check2GoApp(onTripCreateComplete = { _, _, _ -> })
+            }
+        }
+
+        fillDestinationAndStart()
+        composeRule.onNodeWithTag("trip_reminder_toggle").performClick()
+
+        composeRule.onNodeWithTag("reminder_set_action").assertIsDisplayed()
+        composeRule.onNodeWithText("Reminder date").assertIsDisplayed()
+        composeRule.onNodeWithText("Reminder time").assertIsDisplayed()
+    }
+
+    @Test
+    fun confirmingAReminderReturnsToDatesEnabledWithItsSummaryShown() {
+        composeRule.setContent {
+            Check2GoTheme {
+                Check2GoApp(onTripCreateComplete = { _, _, _ -> })
+            }
+        }
+
+        fillDestinationAndStart()
+        composeRule.onNodeWithTag("trip_reminder_toggle").performClick()
+        composeRule.onNodeWithTag("reminder_date_field").performTextInput("2026-09-25")
+        composeRule.onNodeWithTag("reminder_time_field").performTextInput("08:00")
+        composeRule.onNodeWithTag("reminder_set_action").performClick()
+
+        composeRule.onNodeWithText("Travel dates").assertIsDisplayed()
+        composeRule.onNodeWithTag("trip_reminder_toggle").assertIsOn()
+        composeRule.onNodeWithText("Reminder: 2026-09-25 at 08:00").assertIsDisplayed()
+    }
+
+    @Test
+    fun backFromReminderPickerDoesNotEnableTheReminderAndPreservesTheTripDraft() {
+        composeRule.setContent {
+            Check2GoTheme {
+                Check2GoApp(onTripCreateComplete = { _, _, _ -> })
+            }
+        }
+
+        fillDestinationAndStart()
+        composeRule.onNodeWithText("Departure date").performTextInput("2026-10-01")
+        composeRule.onNodeWithTag("trip_reminder_toggle").performClick()
+        composeRule.onNodeWithTag("reminder_date_field").performTextInput("2026-09-25")
+        composeRule.onNodeWithTag("reminder_time_field").performTextInput("08:00")
+
+        composeRule.onNodeWithText("Back").performClick()
+
+        composeRule.onNodeWithText("Travel dates").assertIsDisplayed()
+        composeRule.onNodeWithTag("trip_reminder_toggle").assertIsOff()
+        composeRule.onNodeWithText("2026-10-01").assertIsDisplayed()
+    }
+
+    @Test
+    fun reopeningThePickerAfterConfirmingPrefillsTheLastConfirmedReminder() {
+        composeRule.setContent {
+            Check2GoTheme {
+                Check2GoApp(onTripCreateComplete = { _, _, _ -> })
+            }
+        }
+
+        fillDestinationAndStart()
+        composeRule.onNodeWithTag("trip_reminder_toggle").performClick()
+        composeRule.onNodeWithTag("reminder_date_field").performTextInput("2026-09-25")
+        composeRule.onNodeWithTag("reminder_time_field").performTextInput("08:00")
+        composeRule.onNodeWithTag("reminder_set_action").performClick()
+
+        composeRule.onNodeWithText("Edit").performClick()
+
+        composeRule.onNodeWithText("2026-09-25").assertIsDisplayed()
+        composeRule.onNodeWithText("08:00").assertIsDisplayed()
+    }
+
+    @Test
+    fun editingAConfirmedReminderAndCancelingLeavesThePreviousConfirmedValueInPlace() {
+        composeRule.setContent {
+            Check2GoTheme {
+                Check2GoApp(onTripCreateComplete = { _, _, _ -> })
+            }
+        }
+
+        fillDestinationAndStart()
+        composeRule.onNodeWithTag("trip_reminder_toggle").performClick()
+        composeRule.onNodeWithTag("reminder_date_field").performTextInput("2026-09-25")
+        composeRule.onNodeWithTag("reminder_time_field").performTextInput("08:00")
+        composeRule.onNodeWithTag("reminder_set_action").performClick()
+
+        composeRule.onNodeWithText("Edit").performClick()
+        composeRule.onNodeWithTag("reminder_date_field").performTextClearance()
+        composeRule.onNodeWithTag("reminder_date_field").performTextInput("2026-11-11")
+        composeRule.onNodeWithText("Back").performClick()
+
+        // The unconfirmed edit is discarded; the original confirmed reminder is still shown.
+        composeRule.onNodeWithText("Reminder: 2026-09-25 at 08:00").assertIsDisplayed()
+    }
+
+    @Test
+    fun disablingAConfirmedReminderTurnsItOffWithoutOpeningThePickerAndKeepsTheTripDraft() {
+        composeRule.setContent {
+            Check2GoTheme {
+                Check2GoApp(onTripCreateComplete = { _, _, _ -> })
+            }
+        }
+
+        fillDestinationAndStart()
+        composeRule.onNodeWithText("Departure date").performTextInput("2026-10-01")
+        composeRule.onNodeWithTag("trip_reminder_toggle").performClick()
+        composeRule.onNodeWithTag("reminder_date_field").performTextInput("2026-09-25")
+        composeRule.onNodeWithTag("reminder_time_field").performTextInput("08:00")
+        composeRule.onNodeWithTag("reminder_set_action").performClick()
+
+        composeRule.onNodeWithTag("trip_reminder_toggle").performClick()
+
+        composeRule.onNodeWithText("Travel dates").assertIsDisplayed()
+        composeRule.onNodeWithTag("trip_reminder_toggle").assertIsOff()
+        composeRule.onNodeWithText("Reminder: 2026-09-25 at 08:00").assertDoesNotExist()
+        composeRule.onNodeWithText("2026-10-01").assertIsDisplayed()
+    }
+
+    @Test
+    fun reEnablingAPreviouslyDisabledReminderPrefillsItsLastConfirmedValue() {
+        composeRule.setContent {
+            Check2GoTheme {
+                Check2GoApp(onTripCreateComplete = { _, _, _ -> })
+            }
+        }
+
+        fillDestinationAndStart()
+        composeRule.onNodeWithTag("trip_reminder_toggle").performClick()
+        composeRule.onNodeWithTag("reminder_date_field").performTextInput("2026-09-25")
+        composeRule.onNodeWithTag("reminder_time_field").performTextInput("08:00")
+        composeRule.onNodeWithTag("reminder_set_action").performClick()
+        composeRule.onNodeWithTag("trip_reminder_toggle").performClick()
+
+        composeRule.onNodeWithTag("trip_reminder_toggle").performClick()
+
+        composeRule.onNodeWithText("2026-09-25").assertIsDisplayed()
+        composeRule.onNodeWithText("08:00").assertIsDisplayed()
+    }
+
+    @Test
     fun nextStepFromDatesOpensTravelersScreen() {
         composeRule.setContent {
             Check2GoTheme {
@@ -179,6 +322,38 @@ class Check2GoAppTest {
     }
 
     @Test
+    fun completeEmitsTheConfirmedReminderDateAndTimeInTheDatesDraft() {
+        var dates: TripDatesDraft? = null
+        composeRule.setContent {
+            Check2GoTheme {
+                Check2GoApp(onTripCreateComplete = { _, dt, _ -> dates = dt })
+            }
+        }
+
+        fillDestinationAndStart()
+        composeRule.onNodeWithText("Departure date").performTextInput("2026-10-01")
+        composeRule.onNodeWithText("Return date").performTextInput("2026-10-10")
+        composeRule.onNodeWithTag("trip_reminder_toggle").performClick()
+        composeRule.onNodeWithTag("reminder_date_field").performTextInput("2026-09-25")
+        composeRule.onNodeWithTag("reminder_time_field").performTextInput("08:00")
+        composeRule.onNodeWithTag("reminder_set_action").performClick()
+        composeRule.onNodeWithText("Next step").performClick()
+        composeRule.onNodeWithText("Complete").performClick()
+
+        assertEquals(
+            TripDatesDraft(
+                oneWay = false,
+                departureDate = "2026-10-01",
+                returnDate = "2026-10-10",
+                reminderEnabled = true,
+                reminderDate = "2026-09-25",
+                reminderTime = "08:00"
+            ),
+            dates
+        )
+    }
+
+    @Test
     fun completingTripNavigatesToMyTripsWithVisibleSummary() {
         composeRule.setContent {
             Check2GoTheme {
@@ -243,6 +418,34 @@ class Check2GoAppTest {
 
         composeRule.onNodeWithText("Summer trip").assertIsDisplayed()
         composeRule.onNodeWithText("Winter escape").assertIsDisplayed()
+    }
+
+    @Test
+    fun startingAnotherTripResetsAnyConfirmedReminderFromThePreviousDraft() {
+        composeRule.setContent {
+            Check2GoTheme {
+                Check2GoApp(onTripCreateComplete = { _, _, _ -> })
+            }
+        }
+
+        fillDestinationAndStart()
+        composeRule.onNodeWithTag("trip_reminder_toggle").performClick()
+        composeRule.onNodeWithTag("reminder_date_field").performTextInput("2026-09-25")
+        composeRule.onNodeWithTag("reminder_time_field").performTextInput("08:00")
+        composeRule.onNodeWithTag("reminder_set_action").performClick()
+        composeRule.onNodeWithText("Departure date").performTextInput("2026-10-01")
+        composeRule.onNodeWithText("Return date").performTextInput("2026-10-10")
+        composeRule.onNodeWithText("Next step").performClick()
+        composeRule.onNodeWithText("Complete").performClick()
+
+        composeRule.onNodeWithText("Add a trip").performClick()
+        composeRule.onNodeWithText("Destination country").performTextInput("Norway")
+        composeRule.onNodeWithText("Departure country").performTextInput("Spain")
+        composeRule.onNodeWithText("Trip name").performTextInput("Winter escape")
+        composeRule.onNodeWithText("Start").performClick()
+
+        composeRule.onNodeWithTag("trip_reminder_toggle").assertIsOff()
+        composeRule.onNodeWithText("Reminder: 2026-09-25 at 08:00").assertDoesNotExist()
     }
 
     @Test
