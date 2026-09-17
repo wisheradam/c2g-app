@@ -160,8 +160,8 @@ private fun TripListCard(trip: CompletedTrip, onClick: () -> Unit) {
 @Composable
 private fun FilterControl(filter: TripFilter, onFilterChange: (TripFilter) -> Unit) {
     Row(Modifier.width(140.dp).height(32.dp).clip(RoundedCornerShape(9.dp)).background(Color.White).padding(2.dp)) {
-        FilterButton(stringResource(R.string.trip_filter_active), filter == TripFilter.Active, Modifier.weight(1f)) { onFilterChange(TripFilter.Active) }
-        FilterButton(stringResource(R.string.trip_filter_all), filter == TripFilter.All, Modifier.weight(1f)) { onFilterChange(TripFilter.All) }
+        FilterButton(stringResource(R.string.trip_filter_active), filter == TripFilter.Active, Modifier.weight(1f).testTag("trip_filter_active")) { onFilterChange(TripFilter.Active) }
+        FilterButton(stringResource(R.string.trip_filter_all), filter == TripFilter.All, Modifier.weight(1f).testTag("trip_filter_all")) { onFilterChange(TripFilter.All) }
     }
 }
 
