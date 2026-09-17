@@ -55,7 +55,8 @@ data class PersonalAccount(
 
     fun missingRequiredConsents(): Set<ConsentType> {
         val required = ConsentType.entries.filterTo(mutableSetOf()) {
-            !it.isOptional && (it != ConsentType.FamilyMemberDataProcessing || familyMembers.isNotEmpty())
+            !it.isOptional && it != ConsentType.DocumentInformationProcessing &&
+                (it != ConsentType.FamilyMemberDataProcessing || familyMembers.isNotEmpty())
         }
         val accepted = consents.filter { it.currentDecision?.status == ConsentStatus.Accepted }.map { it.type }.toSet()
         return required - accepted
@@ -184,6 +185,7 @@ enum class ConsentType(val isOptional: Boolean) {
     PersonalDataProcessing(false),
     PersonalizedRecommendations(false),
     FamilyMemberDataProcessing(false),
+    DocumentInformationProcessing(false),
     MarketingCommunications(true),
     ProductUpdatesAndNotifications(true)
 }

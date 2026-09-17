@@ -38,6 +38,7 @@ private val consentLabels = mapOf(
     ConsentType.PersonalDataProcessing to "Personal data processing",
     ConsentType.PersonalizedRecommendations to "Use profile data for personalized recommendations",
     ConsentType.FamilyMemberDataProcessing to "Process family-member data",
+    ConsentType.DocumentInformationProcessing to "Process uploaded document information",
     ConsentType.MarketingCommunications to "Marketing communications (optional)",
     ConsentType.ProductUpdatesAndNotifications to "Product updates and notifications (optional)"
 )
