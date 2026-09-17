@@ -54,13 +54,14 @@ fun MyTripsScreen(
     onQuickAdd: () -> Unit,
     onDestinationSelected: (AppDestination) -> Unit,
     modifier: Modifier = Modifier,
-    onTripSelected: (Long) -> Unit = {}
+    onTripSelected: (Long) -> Unit = {},
+    onAccountClick: () -> Unit = {}
 ) {
     var gridLayout by rememberSaveable { mutableStateOf(true) }
     val quickAddLabel = stringResource(R.string.home_quick_add)
     Box(modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         Column(Modifier.fillMaxSize()) {
-            AppHeader()
+            AppHeader(onAccountClick)
             Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp).weight(1f)) {
                 Row(Modifier.fillMaxWidth().height(34.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text(
@@ -160,8 +161,8 @@ private fun TripListCard(trip: CompletedTrip, onClick: () -> Unit) {
 @Composable
 private fun FilterControl(filter: TripFilter, onFilterChange: (TripFilter) -> Unit) {
     Row(Modifier.width(140.dp).height(32.dp).clip(RoundedCornerShape(9.dp)).background(Color.White).padding(2.dp)) {
-        FilterButton(stringResource(R.string.trip_filter_active), filter == TripFilter.Active, Modifier.weight(1f)) { onFilterChange(TripFilter.Active) }
-        FilterButton(stringResource(R.string.trip_filter_all), filter == TripFilter.All, Modifier.weight(1f)) { onFilterChange(TripFilter.All) }
+        FilterButton(stringResource(R.string.trip_filter_active), filter == TripFilter.Active, Modifier.weight(1f).testTag("trip_filter_active")) { onFilterChange(TripFilter.Active) }
+        FilterButton(stringResource(R.string.trip_filter_all), filter == TripFilter.All, Modifier.weight(1f).testTag("trip_filter_all")) { onFilterChange(TripFilter.All) }
     }
 }
 

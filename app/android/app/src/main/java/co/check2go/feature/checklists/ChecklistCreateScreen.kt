@@ -153,7 +153,7 @@ fun ChecklistCreateScreen(
                 Text(stringResource(R.string.checklist_name_label), color = Color(0xFF002349), fontSize = 16.sp)
                 OutlinedTextField(
                     value = draft.name, onValueChange = onNameChange,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().testTag("checklist_name_field"),
                     placeholder = { Text("Checklist name", color = Color(0xFF8D919A)) },
                     singleLine = true, shape = RoundedCornerShape(11.dp)
                 )

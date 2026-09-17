@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -65,17 +66,94 @@ fun ChecklistDetailScreen(
             val unsectioned = checklist.items.filter { it.sectionId == null || it.sectionId !in ids }
             if (unsectioned.isNotEmpty()) ChecklistItemGroup(stringResource(R.string.checklist_no_section), unsectioned, onToggleItem)
 
+            if (checklist.name.equals("Transfer", ignoreCase = true)) {
+                TransferPromotion()
+            } else {
+                TeamChecklistPromotion()
+            }
+
             Spacer(Modifier.height(22.dp))
+            NotificationCard()
+            NotificationCard()
             Box(
                 Modifier.fillMaxWidth().height(44.dp).clip(RoundedCornerShape(10.dp)).background(Color(0xFFE3EAF3)),
                 contentAlignment = Alignment.Center
-            ) { Text("⚑  Set notification", color = Color(0xFF043CB3), fontSize = 16.sp) }
+            ) { Text("＋  Add notification", color = Color(0xFF043CB3), fontSize = 16.sp) }
             Spacer(Modifier.height(24.dp))
             DetailAction("✎", stringResource(R.string.checklist_edit_action), onEditChecklist)
             DetailAction("▣", stringResource(R.string.checklist_duplicate_action), onDuplicateChecklist)
             DetailAction("♙", "Delete checklist", {}, Color(0xFFC23C68))
             Spacer(Modifier.height(16.dp))
         }
+    }
+}
+
+@Composable
+private fun NotificationCard() {
+    Column(
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Color.White)
+            .padding(horizontal = 16.dp, vertical = 12.dp).testTag("checklist_notification")
+    ) {
+        Row(Modifier.fillMaxWidth()) {
+            Text("Notification", Modifier.weight(1f), color = Color(0xFF002349), fontSize = 16.sp)
+            Text("×", color = Color(0xFF8D919A), fontSize = 20.sp)
+        }
+        Text("Jun 9, 2024 at 9:41 AM", color = Color(0xFF043CB3), fontSize = 14.sp)
+    }
+}
+
+/** Approved people-free team promotion used by checklist states 1:29908 and 1:29981. */
+@Composable
+private fun TeamChecklistPromotion() {
+    Box(
+        Modifier.fillMaxWidth().height(183.dp).clip(RoundedCornerShape(14.dp))
+            .background(Brush.horizontalGradient(listOf(Color(0xFF4F8FC4), Color(0xFF84E7FF))))
+            .padding(16.dp).testTag("team_checklists_promo")
+    ) {
+        Column(Modifier.fillMaxSize()) {
+            Text("Team checklists", color = Color.White, fontSize = 23.sp, fontWeight = FontWeight.Bold)
+            Text(
+                "You can easily share\nchecklists with other users.\nTry 7 days free trial period",
+                color = Color.White, fontSize = 15.sp, lineHeight = 20.sp
+            )
+            Spacer(Modifier.weight(1f))
+            Box(
+                Modifier.fillMaxWidth().height(42.dp).clip(RoundedCornerShape(10.dp)).background(Color.White),
+                contentAlignment = Alignment.Center
+            ) { Text("Find out more", color = Color(0xFF002349), fontSize = 16.sp) }
+        }
+        Text("●  ◆  ●", Modifier.align(Alignment.CenterEnd), color = Color(0xFF7047E8), fontSize = 25.sp)
+        Text("×", Modifier.align(Alignment.TopEnd), color = Color.White, fontSize = 20.sp)
+    }
+}
+
+/** Approved people-free car-rental promotion used by Transfer state 1:29943. */
+@Composable
+private fun TransferPromotion() {
+    Box(
+        Modifier.fillMaxWidth().height(242.dp).clip(RoundedCornerShape(14.dp))
+            .background(Brush.horizontalGradient(listOf(Color.White, Color(0xFFFFF4D9))))
+            .padding(16.dp).testTag("transfer_promo")
+    ) {
+        Column(Modifier.fillMaxSize()) {
+            Text("Move on your own\nto all the sights", color = Color(0xFF002349), fontSize = 21.sp, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(16.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                Box(Modifier.size(76.dp).clip(RoundedCornerShape(18.dp)).background(Color(0xFFFF4B00)), contentAlignment = Alignment.Center) {
+                    Text("SIXT", color = Color.White, fontSize = 19.sp, fontWeight = FontWeight.Bold)
+                }
+                Box(Modifier.size(76.dp).clip(RoundedCornerShape(18.dp)).background(Color(0xFFE8003F)), contentAlignment = Alignment.Center) {
+                    Text("AVIS", color = Color.White, fontSize = 19.sp, fontWeight = FontWeight.Bold)
+                }
+                Text("🚕", fontSize = 46.sp)
+            }
+            Spacer(Modifier.weight(1f))
+            Box(
+                Modifier.fillMaxWidth().height(42.dp).clip(RoundedCornerShape(10.dp)).background(Color(0xFFE9EEF5)),
+                contentAlignment = Alignment.Center
+            ) { Text("Request for car rental", color = Color(0xFF043CB3), fontSize = 16.sp) }
+        }
+        Text("×", Modifier.align(Alignment.TopEnd), color = Color(0xFF8D919A), fontSize = 20.sp)
     }
 }
 

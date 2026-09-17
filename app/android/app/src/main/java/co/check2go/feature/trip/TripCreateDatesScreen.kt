@@ -190,7 +190,10 @@ private fun DateField(label: String, value: String, onChange: (String) -> Unit, 
                 .background(Color.White).padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically
         ) {
             BasicTextField(
-                value, onChange, singleLine = true, modifier = Modifier.weight(1f),
+                value, onChange, singleLine = true,
+                modifier = Modifier.weight(1f).testTag(
+                    if (label.contains("Departure")) "departure_date_field" else "return_date_field"
+                ),
                 textStyle = androidx.compose.ui.text.TextStyle(color = Color(0xFF8D919A), fontSize = 16.sp, lineHeight = 24.sp),
                 decorationBox = { inner -> if (value.isEmpty()) Text("25.03.2024", color = Color(0xFF8D919A), fontSize = 16.sp) else inner() }
             )

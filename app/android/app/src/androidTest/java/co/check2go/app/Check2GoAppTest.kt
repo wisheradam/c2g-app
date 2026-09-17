@@ -42,8 +42,8 @@ class Check2GoAppTest {
 
     private fun fillDestinationDatesAndAdvanceToTravelers() {
         fillDestinationAndStart()
-        composeRule.onNodeWithText("Departure date").performTextInput("2026-10-01")
-        composeRule.onNodeWithText("Return date").performTextInput("2026-10-10")
+        composeRule.onNodeWithTag("departure_date_field").performTextInput("2026-10-01")
+        composeRule.onNodeWithTag("return_date_field").performTextInput("2026-10-10")
         composeRule.onNodeWithText("Next step").performClick()
     }
 
@@ -138,7 +138,7 @@ class Check2GoAppTest {
         }
 
         fillDestinationAndStart()
-        composeRule.onNodeWithText("Departure date").performTextInput("2026-10-01")
+        composeRule.onNodeWithTag("departure_date_field").performTextInput("2026-10-01")
         composeRule.onNodeWithTag("trip_reminder_toggle").performClick()
         composeRule.onNodeWithTag("reminder_date_field").performTextInput("2026-09-25")
         composeRule.onNodeWithTag("reminder_time_field").performTextInput("08:00")
@@ -202,7 +202,7 @@ class Check2GoAppTest {
         }
 
         fillDestinationAndStart()
-        composeRule.onNodeWithText("Departure date").performTextInput("2026-10-01")
+        composeRule.onNodeWithTag("departure_date_field").performTextInput("2026-10-01")
         composeRule.onNodeWithTag("trip_reminder_toggle").performClick()
         composeRule.onNodeWithTag("reminder_date_field").performTextInput("2026-09-25")
         composeRule.onNodeWithTag("reminder_time_field").performTextInput("08:00")
@@ -331,8 +331,8 @@ class Check2GoAppTest {
         }
 
         fillDestinationAndStart()
-        composeRule.onNodeWithText("Departure date").performTextInput("2026-10-01")
-        composeRule.onNodeWithText("Return date").performTextInput("2026-10-10")
+        composeRule.onNodeWithTag("departure_date_field").performTextInput("2026-10-01")
+        composeRule.onNodeWithTag("return_date_field").performTextInput("2026-10-10")
         composeRule.onNodeWithTag("trip_reminder_toggle").performClick()
         composeRule.onNodeWithTag("reminder_date_field").performTextInput("2026-09-25")
         composeRule.onNodeWithTag("reminder_time_field").performTextInput("08:00")
@@ -384,7 +384,7 @@ class Check2GoAppTest {
         composeRule.onNodeWithText("All").performClick()
         composeRule.onNodeWithText("Summer trip").assertIsDisplayed()
 
-        composeRule.onNodeWithText("Active").performClick()
+        composeRule.onNodeWithTag("trip_filter_active").performClick()
         composeRule.onNodeWithText("Summer trip").assertIsDisplayed()
     }
 
@@ -411,8 +411,8 @@ class Check2GoAppTest {
         composeRule.onNodeWithText("Departure country").performTextInput("Spain")
         composeRule.onNodeWithText("Trip name").performTextInput("Winter escape")
         composeRule.onNodeWithText("Start").performClick()
-        composeRule.onNodeWithText("Departure date").performTextInput("2026-12-05")
-        composeRule.onNodeWithText("Return date").performTextInput("2026-12-12")
+        composeRule.onNodeWithTag("departure_date_field").performTextInput("2026-12-05")
+        composeRule.onNodeWithTag("return_date_field").performTextInput("2026-12-12")
         composeRule.onNodeWithText("Next step").performClick()
         composeRule.onNodeWithText("Complete").performClick()
 
@@ -433,8 +433,8 @@ class Check2GoAppTest {
         composeRule.onNodeWithTag("reminder_date_field").performTextInput("2026-09-25")
         composeRule.onNodeWithTag("reminder_time_field").performTextInput("08:00")
         composeRule.onNodeWithTag("reminder_set_action").performClick()
-        composeRule.onNodeWithText("Departure date").performTextInput("2026-10-01")
-        composeRule.onNodeWithText("Return date").performTextInput("2026-10-10")
+        composeRule.onNodeWithTag("departure_date_field").performTextInput("2026-10-01")
+        composeRule.onNodeWithTag("return_date_field").performTextInput("2026-10-10")
         composeRule.onNodeWithText("Next step").performClick()
         composeRule.onNodeWithText("Complete").performClick()
 
@@ -524,7 +524,7 @@ class Check2GoAppTest {
         composeRule.onNodeWithText("Checklists").performClick()
         composeRule.onNodeWithText("Create checklist").performClick()
 
-        composeRule.onNodeWithText("Checklist name").assertIsDisplayed()
+        composeRule.onNodeWithTag("checklist_name_field").assertIsDisplayed()
     }
 
     @Test
@@ -538,7 +538,7 @@ class Check2GoAppTest {
         composeRule.onNodeWithText("Checklists").performClick()
         composeRule.onNodeWithContentDescription("Quick add").performClick()
 
-        composeRule.onNodeWithText("Checklist name").assertIsDisplayed()
+        composeRule.onNodeWithTag("checklist_name_field").assertIsDisplayed()
     }
 
     @Test
@@ -551,7 +551,7 @@ class Check2GoAppTest {
 
         composeRule.onNodeWithText("Checklists").performClick()
         composeRule.onNodeWithText("Create checklist").performClick()
-        composeRule.onNodeWithText("Checklist name").performTextInput("Before leaving")
+        composeRule.onNodeWithTag("checklist_name_field").performTextInput("Before leaving")
 
         composeRule.onNodeWithText("Back").performClick()
         composeRule.onNodeWithText("No active checklists").assertIsDisplayed()
@@ -575,7 +575,7 @@ class Check2GoAppTest {
 
         composeRule.onNodeWithText("Checklists").performClick()
         composeRule.onNodeWithText("Create checklist").performClick()
-        composeRule.onNodeWithText("Checklist name").performTextInput("Before leaving")
+        composeRule.onNodeWithTag("checklist_name_field").performTextInput("Before leaving")
         composeRule.onNodeWithTag("new_item_name_field").performTextInput("Passport")
         composeRule.onNodeWithText("Add item").performClick()
         composeRule.onNodeWithText("Save changes").performScrollTo().performClick()
@@ -599,7 +599,7 @@ class Check2GoAppTest {
 
         composeRule.onNodeWithText("Checklists").performClick()
         composeRule.onNodeWithText("Create checklist").performClick()
-        composeRule.onNodeWithText("Checklist name").performTextInput("Before leaving")
+        composeRule.onNodeWithTag("checklist_name_field").performTextInput("Before leaving")
         composeRule.onNodeWithText("Save changes").performScrollTo().performClick()
 
         composeRule.onNodeWithText("Create checklist").performClick()
@@ -610,7 +610,7 @@ class Check2GoAppTest {
     private fun createChecklistWithOneItem(checklistName: String, itemName: String) {
         composeRule.onNodeWithText("Checklists").performClick()
         composeRule.onNodeWithText("Create checklist").performClick()
-        composeRule.onNodeWithText("Checklist name").performTextInput(checklistName)
+        composeRule.onNodeWithTag("checklist_name_field").performTextInput(checklistName)
         composeRule.onNodeWithTag("new_item_name_field").performTextInput(itemName)
         composeRule.onNodeWithText("Add item").performClick()
         composeRule.onNodeWithText("Save changes").performScrollTo().performClick()
@@ -729,7 +729,7 @@ class Check2GoAppTest {
         composeRule.onNodeWithText("Edit checklist").performClick()
 
         composeRule.onNodeWithText("Before leaving").performTextClearance()
-        composeRule.onNodeWithText("Checklist name").performTextInput("Packing list")
+        composeRule.onNodeWithTag("checklist_name_field").performTextInput("Packing list")
         composeRule.onNodeWithContentDescription("Remove item Passport").performClick()
         composeRule.onNodeWithText("Save changes").performScrollTo().performClick()
 
@@ -757,7 +757,7 @@ class Check2GoAppTest {
         composeRule.onNodeWithText("Before leaving").performClick()
         composeRule.onNodeWithText("Edit checklist").performClick()
 
-        composeRule.onNodeWithText("Checklist name").performTextInput(" (edited)")
+        composeRule.onNodeWithTag("checklist_name_field").performTextInput(" (edited)")
         composeRule.onNodeWithContentDescription("Remove item Passport").performClick()
 
         composeRule.onNodeWithText("Back").performClick()
@@ -782,7 +782,7 @@ class Check2GoAppTest {
 
         composeRule.onNodeWithText("Checklists").performClick()
         composeRule.onNodeWithText("Create checklist").performClick()
-        composeRule.onNodeWithText("Checklist name").performTextInput("Before leaving")
+        composeRule.onNodeWithTag("checklist_name_field").performTextInput("Before leaving")
         composeRule.onNodeWithText("Section name").performTextInput("Documents")
         composeRule.onNodeWithText("Add section").performClick()
         composeRule.onNodeWithTag("new_item_name_field").performTextInput("Passport")
@@ -816,7 +816,7 @@ class Check2GoAppTest {
 
         composeRule.onNodeWithText("Checklists").performClick()
         composeRule.onNodeWithText("Create checklist").performClick()
-        composeRule.onNodeWithText("Checklist name").performTextInput("Before leaving")
+        composeRule.onNodeWithTag("checklist_name_field").performTextInput("Before leaving")
         composeRule.onNodeWithText("Section name").performTextInput("Documents")
         composeRule.onNodeWithText("Add section").performClick()
         composeRule.onNodeWithTag("new_item_name_field").performTextInput("Passport")
@@ -839,7 +839,7 @@ class Check2GoAppTest {
         // Detail shows the item grouped under Documents (its now-saved section) and marked with
         // the include-file note.
         composeRule.onNodeWithText("Documents").assertIsDisplayed()
-        composeRule.onNodeWithTag("checklist_detail_upload_file_note_1").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithTag("checklist_detail_upload_file_note_1", useUnmergedTree = true).assertIsDisplayed()
     }
 
     @Test
@@ -852,7 +852,7 @@ class Check2GoAppTest {
 
         composeRule.onNodeWithText("Checklists").performClick()
         composeRule.onNodeWithText("Create checklist").performClick()
-        composeRule.onNodeWithText("Checklist name").performTextInput("Before leaving")
+        composeRule.onNodeWithTag("checklist_name_field").performTextInput("Before leaving")
         composeRule.onNodeWithText("Section name").performTextInput("Documents")
         composeRule.onNodeWithText("Add section").performClick()
         composeRule.onNodeWithTag("new_item_name_field").performTextInput("Passport")
@@ -973,10 +973,10 @@ class Check2GoAppTest {
 
         // Unsaved in-progress rename: Duplicate should copy the saved checklist ("Before leaving"),
         // not this unsaved edit.
-        composeRule.onNodeWithText("Before leaving").performTextClearance()
-        composeRule.onNodeWithText("Checklist name").performTextInput("Renamed but unsaved")
+        composeRule.onNodeWithTag("checklist_name_field").performTextClearance()
+        composeRule.onNodeWithTag("checklist_name_field").performTextInput("Renamed but unsaved")
 
-        composeRule.onNodeWithText("Duplicate checklist").performClick()
+        composeRule.onNodeWithText("Duplicate checklist").performScrollTo().performClick()
 
         composeRule.onNodeWithText("A copy has been created").assertIsDisplayed()
         composeRule.onNodeWithText("Before leaving").assertIsDisplayed()
@@ -1000,7 +1000,7 @@ class Check2GoAppTest {
         composeRule.onNodeWithText("Before leaving").performClick()
         composeRule.onNodeWithText("Edit checklist").performClick()
 
-        composeRule.onNodeWithText("Duplicate checklist").performClick()
+        composeRule.onNodeWithText("Duplicate checklist").performScrollTo().performClick()
         composeRule.onNodeWithText("Use now").performClick()
 
         // The duplicate's own detail, carrying the item forward.
