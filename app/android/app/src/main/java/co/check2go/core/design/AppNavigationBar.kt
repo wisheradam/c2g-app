@@ -6,13 +6,9 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.Icon
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.CalendarMonth
-import androidx.compose.material.icons.outlined.Checklist
-import androidx.compose.material.icons.outlined.Description
-import androidx.compose.material.icons.outlined.Home
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.foundation.Image
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.res.painterResource
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -27,12 +23,12 @@ enum class AppDestination(@StringRes val labelRes: Int) {
     Events(R.string.nav_events)
 }
 
-private val AppDestination.icon: ImageVector
+private val AppDestination.icon: Int
     get() = when (this) {
-        AppDestination.Home -> Icons.Outlined.Home
-        AppDestination.Documents -> Icons.Outlined.Description
-        AppDestination.Checklists -> Icons.Outlined.Checklist
-        AppDestination.Events -> Icons.Outlined.CalendarMonth
+        AppDestination.Home -> R.drawable.c2g_home
+        AppDestination.Documents -> R.drawable.c2g_documents
+        AppDestination.Checklists -> R.drawable.c2g_checklists
+        AppDestination.Events -> R.drawable.c2g_events
     }
 
 /**
@@ -53,7 +49,14 @@ internal fun AppNavigationBar(
                 selected = destination == selected,
                 onClick = { onDestinationSelected(destination) },
                 icon = {
-                    Icon(imageVector = destination.icon, contentDescription = null)
+                    Image(
+                        painter = painterResource(destination.icon),
+                        contentDescription = null,
+                        colorFilter = ColorFilter.tint(
+                            if (destination == selected) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    )
                 },
                 label = { Text(text = label) },
                 colors = NavigationBarItemDefaults.colors(

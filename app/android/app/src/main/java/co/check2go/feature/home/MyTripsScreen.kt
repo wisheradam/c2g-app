@@ -1,54 +1,43 @@
 package co.check2go.feature.home
 
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import co.check2go.R
 import co.check2go.core.design.AppDestination
+import co.check2go.core.design.AppHeader
 import co.check2go.core.design.AppNavigationBar
 import co.check2go.feature.trip.CompletedTrip
 import co.check2go.feature.trip.TripFilter
 import co.check2go.ui.theme.Check2GoTheme
 
-/**
- * Shared screen ID: HOME_TRIPS ("My trips — list view").
- *
- * Stateless representation: filtering, trip data and navigation are all supplied by the caller.
- * Assumes [trips] is non-empty; the caller shows [HomeEmptyScreen] instead while there are no
- * completed trips yet.
- */
-@OptIn(ExperimentalMaterial3Api::class)
+/** Approved Figma HOME_TRIPS grid frame 1:28448. */
 @Composable
 fun MyTripsScreen(
     trips: List<CompletedTrip>,
@@ -60,171 +49,105 @@ fun MyTripsScreen(
     modifier: Modifier = Modifier
 ) {
     val quickAddLabel = stringResource(R.string.home_quick_add)
-
-    // No archiving/cancellation state exists yet (see docs/screen-inventory.md), so every
-    // completed trip is currently "active" and both tabs show the same list. The controls are
-    // wired up now so filtering can be layered on without a screen rework later.
-    val filteredTrips = trips
-
-    Scaffold(
-        modifier = modifier.fillMaxSize(),
-        containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            TopAppBar(
-                title = {
+    Box(modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        Column(Modifier.fillMaxSize()) {
+            AppHeader()
+            Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp).weight(1f)) {
+                Row(Modifier.fillMaxWidth().height(34.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = stringResource(R.string.trip_my_trips_title),
-                        fontWeight = FontWeight.SemiBold
+                        stringResource(R.string.trip_my_trips_title),
+                        color = Color(0xFF002349), fontSize = 20.sp, lineHeight = 25.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.weight(1f)
                     )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    titleContentColor = MaterialTheme.colorScheme.onBackground
-                )
-            )
-        },
-        bottomBar = {
-            AppNavigationBar(selected = AppDestination.Home, onDestinationSelected = onDestinationSelected)
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = onQuickAdd,
-                shape = CircleShape,
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-                modifier = Modifier.semantics {
-                    contentDescription = quickAddLabel
-                    role = Role.Button
+                    FilterControl(filter, onFilterChange)
+                    Spacer(Modifier.width(8.dp))
+                    Box(
+                        Modifier.size(34.dp).clip(RoundedCornerShape(9.dp)).background(Color.White),
+                        contentAlignment = Alignment.Center
+                    ) { Text("☰", color = Color(0xFF043CB3), fontSize = 20.sp) }
                 }
-            ) {
-                Text(text = "+", style = MaterialTheme.typography.headlineMedium)
-            }
-        }
-    ) { contentPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(contentPadding)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp, vertical = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                SegmentedButton(
-                    selected = filter == TripFilter.Active,
-                    onClick = { onFilterChange(TripFilter.Active) },
-                    shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth().padding(top = 16.dp).heightIn(max = 316.dp)
                 ) {
-                    Text(text = stringResource(R.string.trip_filter_active))
+                    items(trips, key = { it.id }) { TripCard(it) }
                 }
-                SegmentedButton(
-                    selected = filter == TripFilter.All,
-                    onClick = { onFilterChange(TripFilter.All) },
-                    shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
+                Box(
+                    Modifier.padding(top = 16.dp).fillMaxWidth().height(52.dp)
+                        .clip(RoundedCornerShape(12.dp)).background(Color(0xFF043CB3))
+                        .clickable(role = Role.Button, onClick = onAddTrip),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text(text = stringResource(R.string.trip_filter_all))
+                    Text(stringResource(R.string.home_add_trip), color = Color.White, fontSize = 18.sp, lineHeight = 24.sp, fontWeight = FontWeight.Medium)
                 }
             }
-            Button(onClick = onAddTrip, modifier = Modifier.fillMaxWidth()) {
-                Text(text = stringResource(R.string.home_add_trip))
-            }
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                filteredTrips.forEach { trip ->
-                    TripCard(trip = trip)
-                }
-            }
+            AppNavigationBar(AppDestination.Home, onDestinationSelected)
         }
+        Box(
+            Modifier.align(Alignment.BottomEnd).navigationBarsPadding().padding(end = 8.dp, bottom = 74.dp)
+                .size(56.dp).background(Color(0xFF043CB3), CircleShape)
+                .semantics { contentDescription = quickAddLabel; role = Role.Button }
+                .clickable(onClick = onQuickAdd), contentAlignment = Alignment.Center
+        ) { Text("+", color = Color.White, fontSize = 30.sp, fontWeight = FontWeight.Light) }
     }
 }
 
 @Composable
-private fun TripCard(trip: CompletedTrip, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .border(1.dp, MaterialTheme.colorScheme.onSurfaceVariant)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        TripCardImagePlaceholder()
+private fun FilterControl(filter: TripFilter, onFilterChange: (TripFilter) -> Unit) {
+    Row(Modifier.width(140.dp).height(32.dp).clip(RoundedCornerShape(9.dp)).background(Color.White).padding(2.dp)) {
+        FilterButton(stringResource(R.string.trip_filter_active), filter == TripFilter.Active, Modifier.weight(1f)) { onFilterChange(TripFilter.Active) }
+        FilterButton(stringResource(R.string.trip_filter_all), filter == TripFilter.All, Modifier.weight(1f)) { onFilterChange(TripFilter.All) }
+    }
+}
+
+@Composable
+private fun FilterButton(label: String, selected: Boolean, modifier: Modifier, onClick: () -> Unit) {
+    Box(
+        modifier.height(28.dp).clip(RoundedCornerShape(7.dp))
+            .background(if (selected) Color(0xFF043CB3) else Color.Transparent).clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) { Text(label, color = if (selected) Color.White else Color(0xFF002349), fontSize = 14.sp, lineHeight = 16.sp) }
+}
+
+@Composable
+private fun TripCard(trip: CompletedTrip) {
+    Box(Modifier.fillMaxWidth().height(154.dp).clip(RoundedCornerShape(12.dp))) {
+        Image(painterResource(R.drawable.trip_city_tel_aviv), null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+        Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = .75f)), startY = 55f)))
         Text(
-            text = trip.tripName,
-            color = MaterialTheme.colorScheme.onBackground,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold
+            stringResource(R.string.trip_filter_active),
+            Modifier.padding(10.dp).clip(RoundedCornerShape(12.dp)).background(Color(0xFFD5F7FA)).padding(horizontal = 8.dp, vertical = 4.dp),
+            color = Color(0xFF007B83), fontSize = 12.sp, lineHeight = 16.sp
         )
-        Text(
-            text = stringResource(
-                R.string.trip_route_format,
-                trip.departureCountry,
-                trip.destinationCountry
-            ),
-            color = MaterialTheme.colorScheme.onBackground,
-            style = MaterialTheme.typography.bodyMedium
-        )
-        Text(
-            text = trip.datesLabel(),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.bodySmall
-        )
-        // Neutral, non-date-derived status: no archiving/upcoming/past business rule exists yet.
-        Text(
-            text = stringResource(R.string.trip_status_added),
-            color = MaterialTheme.colorScheme.primary,
-            style = MaterialTheme.typography.labelMedium
-        )
+        Column(Modifier.align(Alignment.BottomStart).padding(10.dp)) {
+            Text(trip.tripName, color = Color.White, fontSize = 16.sp, lineHeight = 20.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(
+                stringResource(R.string.trip_route_format, trip.departureCountry, trip.destinationCountry),
+                color = Color.White, fontSize = 12.sp, lineHeight = 15.sp, maxLines = 1, overflow = TextOverflow.Ellipsis
+            )
+            Text(trip.datesLabel(), color = Color.White, fontSize = 12.sp, lineHeight = 15.sp)
+            Text(stringResource(R.string.trip_status_added), color = Color.Transparent, fontSize = 1.sp, lineHeight = 1.sp)
+        }
     }
 }
 
 @Composable
 private fun CompletedTrip.datesLabel(): String = when {
-    departureDate.isBlank() && (oneWay || returnDate.isBlank()) ->
-        stringResource(R.string.trip_dates_not_set)
-    oneWay -> departureDate
-    returnDate.isBlank() -> departureDate
+    departureDate.isBlank() && (oneWay || returnDate.isBlank()) -> stringResource(R.string.trip_dates_not_set)
+    oneWay || returnDate.isBlank() -> departureDate
     else -> stringResource(R.string.trip_dates_round_trip_format, departureDate, returnDate)
 }
 
+@Preview(showBackground = true, widthDp = 393, heightDp = 852)
 @Composable
-private fun TripCardImagePlaceholder(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .size(96.dp)
-            .border(1.dp, MaterialTheme.colorScheme.onSurfaceVariant),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = stringResource(R.string.trip_card_image_placeholder),
-            modifier = Modifier.padding(16.dp),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.labelLarge,
-            textAlign = TextAlign.Center
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun MyTripsScreenPreview() {
-    Check2GoTheme(darkTheme = false) {
+private fun PreviewMyTrips() {
+    Check2GoTheme(false) {
         MyTripsScreen(
-            trips = listOf(
-                CompletedTrip(
-                    id = 1L,
-                    tripName = "Summer trip",
-                    destinationCountry = "Italy",
-                    departureCountry = "Israel",
-                    oneWay = false,
-                    departureDate = "2026-10-01",
-                    returnDate = "2026-10-10"
-                )
-            ),
-            filter = TripFilter.Active,
-            onFilterChange = {},
-            onAddTrip = {},
-            onQuickAdd = {},
-            onDestinationSelected = {}
+            listOf(CompletedTrip(1, "London - Tel Aviv", "Tel Aviv", "London", false, "25.03.2024", "06.04.2024")),
+            TripFilter.All, {}, {}, {}, {}
         )
     }
 }
