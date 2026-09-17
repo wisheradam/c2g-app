@@ -99,6 +99,7 @@ fun AccountProfileScreen(
     account: PersonalAccount,
     onBack: () -> Unit,
     onSave: (PersonalAccount) -> Unit,
+    onManageFamily: () -> Unit = {},
     referenceDate: LocalDate = LocalDate.now()
 ) {
     BackHandler(onBack = onBack)
@@ -117,6 +118,11 @@ fun AccountProfileScreen(
             modifier = Modifier.fillMaxSize().padding(padding).padding(horizontal = 16.dp).testTag("account_profile"),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            item {
+                OutlinedButton(onClick = onManageFamily, modifier = Modifier.fillMaxWidth()) {
+                    Text("Family members (${account.familyMembers.size})")
+                }
+            }
             item { Text("Personal details", style = MaterialTheme.typography.titleLarge) }
             item { Field("First name", draft.firstName) { draft = draft.copy(firstName = it) } }
             item { Field("Last name", draft.lastName) { draft = draft.copy(lastName = it) } }
