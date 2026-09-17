@@ -1,5 +1,8 @@
 package co.check2go.app
 
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -9,6 +12,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.FileProvider
 import co.check2go.R
 import co.check2go.core.design.AppDestination
 import co.check2go.feature.checklists.ChecklistCreateScreen
@@ -43,9 +47,19 @@ import co.check2go.feature.account.InterestsScreen
 import co.check2go.feature.account.PrivacyConsentScreen
 import co.check2go.feature.account.TravelStatusScreen
 import co.check2go.feature.account.LocalAccountStore
+import co.check2go.feature.account.ConsentStatus
+import co.check2go.feature.account.ConsentType
+import co.check2go.feature.documents.DocumentDraft
+import co.check2go.feature.documents.DocumentEditorScreen
+import co.check2go.feature.documents.DocumentsScreen
+import co.check2go.feature.documents.LocalDocumentStore
+import co.check2go.feature.documents.TravelDocument
+import java.time.Instant
 import co.check2go.feature.home.HomeEmptyScreen
 import co.check2go.feature.home.MyTripsScreen
 import co.check2go.feature.events.EventCalendarScreen
+import co.check2go.feature.settings.LanguageSettingsScreen
+import co.check2go.core.localization.AppLanguage
 import co.check2go.feature.trip.CompletedTrip
 import co.check2go.feature.trip.CompletedTripListSaver
 import co.check2go.feature.trip.ReminderPickerScreen
@@ -81,7 +95,10 @@ private enum class AppScreen {
     FamilyMembers,
     Interests,
     PrivacyConsent,
-    TravelStatus
+    TravelStatus,
+    Settings,
+    Documents,
+    DocumentEditor
 }
 
 /**
@@ -96,6 +113,10 @@ private enum class AppScreen {
  */
 @Composable
 fun Check2GoApp(
+    selectedLanguage: AppLanguage = AppLanguage.English,
+    onLanguageChanged: (AppLanguage) -> Unit = {},
+    onToggleTheme: () -> Unit = {},
+    isDarkTheme: Boolean = false,
     onTripCreateComplete: (TripDestinationDraft, TripDatesDraft, TripTravelersDraft) -> Unit,
     onChecklistCreated: (ChecklistDraft) -> Unit = {}
 ) {
@@ -105,10 +126,32 @@ fun Check2GoApp(
         LocalAccountStore(context)
     }
     var personalAccount by remember { mutableStateOf(accountStore.load()) }
+    val documentStore = remember(context) { LocalDocumentStore(context) }
+    var documents by remember { mutableStateOf(documentStore.load()) }
+    var documentDraft by remember { mutableStateOf(DocumentDraft.create(null, false)) }
 
     fun persistPersonalAccount(updated: PersonalAccount) {
         accountStore.save(updated)
         personalAccount = updated
+    }
+
+    fun persistDocuments(updated: List<TravelDocument>) {
+        documentStore.save(updated)
+        documents = updated
+    }
+
+    fun openAttachment(attachment: co.check2go.feature.documents.DocumentAttachment) {
+        runCatching {
+            val file = documentStore.materializeAttachment(attachment)
+            val uri = FileProvider.getUriForFile(context, "${context.packageName}.documents", file)
+            context.startActivity(Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, attachment.mimeType)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
+            })
+        }.onFailure {
+            val message = if (it is ActivityNotFoundException) "No app can open this file" else "Could not open attachment"
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+        }
     }
 
     var destinationCountry by rememberSaveable { mutableStateOf("") }
@@ -222,12 +265,12 @@ fun Check2GoApp(
         screen = AppScreen.ChecklistDuplicateConfirmation
     }
 
-    // Documents has no approved standalone screen yet. Events opens the approved calendar sheet.
+    // Documents is a device-only wallet. Events opens the approved calendar sheet.
     val onAppDestinationSelected: (AppDestination) -> Unit = { destination ->
         when (destination) {
             AppDestination.Home -> screen = AppScreen.Home
             AppDestination.Checklists -> screen = AppScreen.Checklists
-            AppDestination.Documents -> {}
+            AppDestination.Documents -> screen = AppScreen.Documents
             AppDestination.Events -> screen = AppScreen.EventsCalendar
         }
     }
@@ -239,7 +282,10 @@ fun Check2GoApp(
                     onAddTrip = startNewTripDraft,
                     onQuickAdd = startNewTripDraft,
                     onDestinationSelected = onAppDestinationSelected,
-                    onAccountClick = { screen = AppScreen.AccountProfile }
+                    onAccountClick = { screen = AppScreen.AccountProfile },
+                    onSettingsClick = { screen = AppScreen.Settings },
+                    onToggleTheme = onToggleTheme,
+                    isDarkTheme = isDarkTheme
                 )
             } else {
                 MyTripsScreen(
@@ -253,9 +299,68 @@ fun Check2GoApp(
                         selectedTripId = it
                         screen = AppScreen.TripHub
                     },
-                    onAccountClick = { screen = AppScreen.AccountProfile }
+                    onAccountClick = { screen = AppScreen.AccountProfile },
+                    onSettingsClick = { screen = AppScreen.Settings },
+                    onToggleTheme = onToggleTheme,
+                    isDarkTheme = isDarkTheme
                 )
             }
+        }
+
+        AppScreen.Settings -> LanguageSettingsScreen(
+            selectedLanguage = selectedLanguage,
+            onLanguageSelected = onLanguageChanged,
+            onBack = { screen = AppScreen.Home }
+        )
+
+        AppScreen.Documents -> {
+            DocumentsScreen(
+                documents = documents,
+                onAddDocument = { category, custom ->
+                    documentDraft = DocumentDraft.create(category, custom)
+                    screen = AppScreen.DocumentEditor
+                },
+                onEditDocument = {
+                    documentDraft = DocumentDraft.from(it)
+                    screen = AppScreen.DocumentEditor
+                },
+                onDeleteDocument = { document ->
+                    persistDocuments(documents.filterNot { it.id == document.id })
+                    documentStore.deleteDocument(document)
+                },
+                onOpenAttachment = ::openAttachment,
+                onDestinationSelected = onAppDestinationSelected
+            )
+        }
+
+        AppScreen.DocumentEditor -> {
+            val back = { screen = AppScreen.Documents }
+            val documentConsent = personalAccount.consents.firstOrNull {
+                it.type == ConsentType.DocumentInformationProcessing
+            }?.currentDecision?.status == ConsentStatus.Accepted
+            DocumentEditorScreen(
+                initial = documentDraft,
+                hasDocumentConsent = documentConsent,
+                onAcceptDocumentConsent = {
+                    persistPersonalAccount(personalAccount.withConsentDecision(
+                        ConsentType.DocumentInformationProcessing,
+                        ConsentStatus.Accepted,
+                        "1.0",
+                        Instant.now()
+                    ))
+                },
+                onImportAttachments = { uris, role -> uris.map { documentStore.importAttachment(it, role) } },
+                onOpenAttachment = ::openAttachment,
+                onDeleteAttachment = { documentStore.deleteAttachment(it.id) },
+                onSave = { saved ->
+                    val previous = documents.firstOrNull { it.id == saved.id }
+                    val retainedIds = saved.attachments.map { it.id }.toSet()
+                    persistDocuments(documents.filterNot { it.id == saved.id } + saved)
+                    previous?.attachments?.filterNot { it.id in retainedIds }?.forEach { documentStore.deleteAttachment(it.id) }
+                    screen = AppScreen.Documents
+                },
+                onBack = back
+            )
         }
 
         AppScreen.AccountProfile -> {

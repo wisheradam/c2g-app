@@ -56,3 +56,20 @@ dependencies {
     androidTestImplementation("androidx.test.ext:junit:1.3.0")
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
 }
+
+val localizationKeyPattern = Regex("""<string\\s+name=\"([^\"]+)\"""")
+tasks.register("verifyLocalizationKeys") {
+    group = "verification"
+    description = "Ensures every bundled English string has a Russian translation."
+    doLast {
+        fun keys(path: String): Set<String> = file(path).readText().let { source ->
+            localizationKeyPattern.findAll(source).map { it.groupValues[1] }.toSet()
+        }
+        val english = keys("src/main/res/values/strings.xml")
+        val russian = keys("src/main/res/values-ru/strings.xml")
+        check(english == russian) {
+            "Localization keys differ. Missing Russian: ${english - russian}; unexpected Russian: ${russian - english}"
+        }
+    }
+}
+tasks.named("check").configure { dependsOn("verifyLocalizationKeys") }
