@@ -52,7 +52,7 @@ class AccountProfileScreenTest {
         compose.onNodeWithText("First name").performTextInput("Ada")
         compose.onNodeWithText("Last name").performTextInput("Lovelace")
         compose.onNodeWithText("Date of birth (YYYY-MM-DD)").performTextInput("tomorrow")
-        compose.onNodeWithTag("account_profile").performScrollToIndex(23)
+        compose.onNodeWithTag("account_profile").performScrollToIndex(24)
         compose.onNodeWithTag("account_save").performClick()
 
         compose.onNodeWithText("Use date format YYYY-MM-DD").assertIsDisplayed()

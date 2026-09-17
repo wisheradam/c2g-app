@@ -102,6 +102,7 @@ fun AccountProfileScreen(
     onManageFamily: () -> Unit = {},
     onManageInterests: () -> Unit = {},
     onManagePrivacy: () -> Unit = {},
+    onManageTravelStatus: () -> Unit = {},
     referenceDate: LocalDate = LocalDate.now()
 ) {
     BackHandler(onBack = onBack)
@@ -133,6 +134,11 @@ fun AccountProfileScreen(
             item {
                 OutlinedButton(onClick = onManagePrivacy, modifier = Modifier.fillMaxWidth()) {
                     Text("Privacy and consent")
+                }
+            }
+            item {
+                OutlinedButton(onClick = onManageTravelStatus, modifier = Modifier.fillMaxWidth()) {
+                    Text("Residence permits and entry restrictions")
                 }
             }
             item { Text("Personal details", style = MaterialTheme.typography.titleLarge) }

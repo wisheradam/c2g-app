@@ -40,6 +40,7 @@ import co.check2go.feature.account.PersonalAccount
 import co.check2go.feature.account.FamilyMembersScreen
 import co.check2go.feature.account.InterestsScreen
 import co.check2go.feature.account.PrivacyConsentScreen
+import co.check2go.feature.account.TravelStatusScreen
 import co.check2go.feature.home.HomeEmptyScreen
 import co.check2go.feature.home.MyTripsScreen
 import co.check2go.feature.events.EventCalendarScreen
@@ -77,7 +78,8 @@ private enum class AppScreen {
     AccountProfile,
     FamilyMembers,
     Interests,
-    PrivacyConsent
+    PrivacyConsent,
+    TravelStatus
 }
 
 /**
@@ -255,7 +257,8 @@ fun Check2GoApp(
                 },
                 onManageFamily = { screen = AppScreen.FamilyMembers },
                 onManageInterests = { screen = AppScreen.Interests },
-                onManagePrivacy = { screen = AppScreen.PrivacyConsent }
+                onManagePrivacy = { screen = AppScreen.PrivacyConsent },
+                onManageTravelStatus = { screen = AppScreen.TravelStatus }
             )
         }
 
@@ -277,6 +280,14 @@ fun Check2GoApp(
 
         AppScreen.PrivacyConsent -> {
             PrivacyConsentScreen(
+                account = personalAccount,
+                onAccountChange = { personalAccount = it },
+                onBack = { screen = AppScreen.AccountProfile }
+            )
+        }
+
+        AppScreen.TravelStatus -> {
+            TravelStatusScreen(
                 account = personalAccount,
                 onAccountChange = { personalAccount = it },
                 onBack = { screen = AppScreen.AccountProfile }
